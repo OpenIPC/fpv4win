@@ -1,0 +1,3 @@
+[submodule "3rd/devourer"]
+	path = 3rd/devourer
+	url = https://github.com/OpenIPC/devourer.git
