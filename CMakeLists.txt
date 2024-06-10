@@ -8,18 +8,26 @@ set(CMAKE_AUTOUIC ON)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
+find_package(PkgConfig REQUIRED)
+
 find_package(FFmpeg REQUIRED)
 find_package(SDL2 REQUIRED)
+pkg_check_modules(LIBUSB REQUIRED IMPORTED_TARGET libusb-1.0)
 include_directories(${FFMPEG_INCLUDE_DIRS})
 
 find_package(Qt5 COMPONENTS Quick Multimedia  REQUIRED)
 
 
-file(GLOB_RECURSE LICENSE_LIB_SRC_LIST
+file(GLOB_RECURSE SRC_LIST
+        3rd/rtl8812au-monitor-pcap/*.c
+        3rd/rtl8812au-monitor-pcap/*.cpp
         src/*.cpp)
+list(FILTER SRC_LIST EXCLUDE REGEX ".*/3rd.*/src/main.cpp")
 
-add_executable(${PROJECT_NAME} main.cpp ${LICENSE_LIB_SRC_LIST} qml.qrc)
-target_link_libraries(${PROJECT_NAME} Qt5::Quick ${FFMPEG_LIBRARIES} ${SDL2_LIBRARIES})
+include_directories(3rd/rtl8812au-monitor-pcap/src 3rd/rtl8812au-monitor-pcap/hal)
+add_executable(${PROJECT_NAME} main.cpp ${SRC_LIST} qml.qrc)
+
+target_link_libraries(${PROJECT_NAME} Qt5::Quick ${FFMPEG_LIBRARIES} ${SDL2_LIBRARIES} PkgConfig::LIBUSB)
 
 if (WIN32 AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
     set(DEBUG_SUFFIX)
