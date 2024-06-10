@@ -4,11 +4,13 @@
 
 #ifndef WFBRECEIVER_H
 #define WFBRECEIVER_H
-
+#include <string>
+#include <vector>
 
 
 class WFBReceiver {
-
+public:
+    static std::vector<std::string> GetDongleList();
 };
 
 
