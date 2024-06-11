@@ -188,7 +188,46 @@ ApplicationWindow {
             Rectangle {
                 // Size of the background adapts to the text size plus some padding
                 width: 190
-                height: actionText.height + 10
+                height: countText.height + 10
+                color: "#1c80c9"
+
+                Text {
+                    id: countText
+                    x: 5
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "WFB Pkt/Air Pkt"
+                    font.pixelSize: 16
+                    color: "#ffffff"
+                }
+            }
+            Row {
+                padding:5
+                width: 190
+                Text {
+                    id: wfbPktCountText
+                    x: 5
+                    text: "0"
+                    font.pixelSize: 32
+                    color: "#000000"
+                }
+                Text {
+                    x: 5
+                    text: "/"
+                    font.pixelSize: 32
+                    color: "#000000"
+                }
+                Text {
+                    id: airPktCountText
+                    x: 5
+                    text: "0"
+                    font.pixelSize: 32
+                    color: "#000000"
+                }
+            }
+            Rectangle {
+                // Size of the background adapts to the text size plus some padding
+                width: 190
+                height: logText.height + 10
                 color: "#1c80c9"
 
                 Text {
