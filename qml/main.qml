@@ -195,7 +195,7 @@ ApplicationWindow {
                     id: countText
                     x: 5
                     anchors.verticalCenter: parent.verticalCenter
-                    text: "WFB Pkt/Air Pkt"
+                    text: "WFB Pkt/AIR Pkt"
                     font.pixelSize: 16
                     color: "#ffffff"
                 }
