@@ -40,7 +40,7 @@ ApplicationWindow {
                     id: textItem
                     x: 5
                     anchors.verticalCenter: parent.verticalCenter
-                    text: "Select RTL8812AU PID/VID"
+                    text: "Select RTL8812AU VID/PID"
                     font.pixelSize: 12
                     color: "#ffffff"
                 }
