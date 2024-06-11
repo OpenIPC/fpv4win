@@ -195,7 +195,7 @@ ApplicationWindow {
                     id: countText
                     x: 5
                     anchors.verticalCenter: parent.verticalCenter
-                    text: "WFB Pkt/802.11 Pkt"
+                    text: "WFB Pkt / 802.11 Pkt"
                     font.pixelSize: 16
                     color: "#ffffff"
                 }
@@ -212,7 +212,7 @@ ApplicationWindow {
                 }
                 Text {
                     x: 5
-                    text: "/"
+                    text: " / "
                     font.pixelSize: 32
                     color: "#000000"
                 }
