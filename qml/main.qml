@@ -55,7 +55,7 @@ ApplicationWindow {
                         for (var i = 0; i < dongleList.length; i++) {
                             comboBoxModel.append({text: dongleList[i]});
                         }
-                        comboBox.currentIndex = 0; // Set default selection
+                        selectDev.currentIndex = 0; // Set default selection
                     }
                 }
                 currentIndex: 0
