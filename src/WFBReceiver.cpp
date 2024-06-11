@@ -44,3 +44,6 @@ std::vector<std::string> WFBReceiver::GetDongleList() {
     libusb_exit(ctx);
     return list;
 }
+void WFBReceiver::Start(const std::string &vidPid) {
+
+}

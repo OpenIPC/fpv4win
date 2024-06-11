@@ -11,6 +11,7 @@
 class WFBReceiver {
 public:
     static std::vector<std::string> GetDongleList();
+    void Start(const std::string& vidPid);
 };
 
 
