@@ -177,18 +177,27 @@ ApplicationWindow {
 
                     Text {
                         id: actionStartText
+                        property bool started : false;
                         x: 5
                         anchors.centerIn: parent
-                        text: "START"
+                        text: started?"STOP":"START"
                         font.pixelSize: 32
                         color: "#ffffff"
                     }
                     MouseArea{
                         cursorShape: Qt.PointingHandCursor
                         anchors.fill: parent
+                        Component.onCompleted: {
+                            NativeApi.onWifiStop.connect(()=>{
+                                actionStartText.started = false;
+                            });
+                        }
                         onClicked: function(){
-                            console.log(selectDev.currentText,Number(selectChannel.currentText),Number(selectBw.currentIndex));
-                            NativeApi.Start(selectDev.currentText,Number(selectChannel.currentText),Number(selectBw.currentIndex));
+                            if(!actionStartText.started){
+                                actionStartText.started = NativeApi.Start(selectDev.currentText,Number(selectChannel.currentText),Number(selectBw.currentIndex));
+                            }else{
+                                NativeApi.Stop();
+                            }
                         }
                     }
                 }
@@ -246,17 +255,18 @@ ApplicationWindow {
                     anchors.verticalCenter: parent.verticalCenter
                     text: "WiFi Driver Log"
                     font.pixelSize: 16
-                    color: "#9f9b9b"
+                    color: "#FFFFFF"
                 }
             }
             Rectangle {
                 width:190
                 height:window.height - 385
+                color:"#f3f1f1"
+                clip:true
 
                 Component {
                     id: contactDelegate
                     Item {
-                        width: parent.width;
                         height:log.height
                         Row {
                             padding:2
@@ -284,6 +294,7 @@ ApplicationWindow {
                     z:1
                     anchors.top :logTitle.bottom
                     anchors.fill: parent
+                    anchors.margins:5
                     model: ListModel {}
                     delegate: contactDelegate
                     Component.onCompleted: {

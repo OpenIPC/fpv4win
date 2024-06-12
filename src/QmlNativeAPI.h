@@ -30,13 +30,20 @@ public:
                                 int channelWidth) {
     return WFBReceiver::Start(vidPid.toStdString(), channel, channelWidth);
   }
+  Q_INVOKABLE static bool Stop() {
+    return WFBReceiver::Stop();
+  }
   void PutLog(const std::string &level, const std::string &msg){
       emit onLog(QString(level.c_str()),QString(msg.c_str()));
+  }
+  void NotifyWifiStop(){
+    emit onWifiStop();
   }
 
 signals :
   // onlog
   void onLog(QString level, QString msg);
+  void onWifiStop();
 };
 
 #endif // CTRLCENTER_QMLNATIVEAPI_H

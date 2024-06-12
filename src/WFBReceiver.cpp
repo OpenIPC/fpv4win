@@ -13,6 +13,7 @@
 libusb_context *WFBReceiver::ctx{};
 libusb_device_handle *WFBReceiver::dev_handle{};
 std::shared_ptr<std::thread> WFBReceiver::usbThread{};
+std::unique_ptr<Rtl8812aDevice> WFBReceiver::rtlDevice;
 
 std::vector<std::string> WFBReceiver::GetDongleList() {
   std::vector<std::string> list;
@@ -96,7 +97,7 @@ bool WFBReceiver::Start(const std::string &vidPid, uint8_t channel,
   usbThread = std::make_shared<std::thread>([=](){
     WiFiDriver wifi_driver{logger};
     try{
-      auto rtlDevice = wifi_driver.CreateRtlDevice(dev_handle);
+        rtlDevice = wifi_driver.CreateRtlDevice(dev_handle);
         rtlDevice->Init(
             [](const Packet & p) {
               handle80211Frame(p);
@@ -108,6 +109,17 @@ bool WFBReceiver::Start(const std::string &vidPid, uint8_t channel,
             });
     }catch (...){
     }
+    auto rc = libusb_release_interface(dev_handle, 0);
+    if (rc < 0) {
+      // error
+    }
+    logger->info("stoped");
+    libusb_close(dev_handle);
+    libusb_exit(ctx);
+    dev_handle = nullptr;
+    ctx = nullptr;
+    Stop();
+    usbThread.reset();
   });
   usbThread->detach();
 
@@ -116,11 +128,14 @@ bool WFBReceiver::Start(const std::string &vidPid, uint8_t channel,
 void WFBReceiver::handle80211Frame(const Packet &pkt) {
 
 }
-WFBReceiver::~WFBReceiver() {
-  auto rc = libusb_release_interface(dev_handle, 0);
-  if (rc < 0) {
-    // error
+bool WFBReceiver::Stop() {
+  if(rtlDevice){
+    rtlDevice->should_stop = true;
   }
-  libusb_close(dev_handle);
-  libusb_exit(ctx);
+
+  QmlNativeAPI::Instance().NotifyWifiStop();
+  return true;
+}
+WFBReceiver::~WFBReceiver() {
+  Stop();
 }
