@@ -123,7 +123,7 @@ bool WFBReceiver::Start(const std::string &vidPid, uint8_t channel,
     if (rc < 0) {
       // error
     }
-    logger->info("stoped");
+    logger->info("==========stoped==========");
     libusb_close(dev_handle);
     libusb_exit(ctx);
     dev_handle = nullptr;
