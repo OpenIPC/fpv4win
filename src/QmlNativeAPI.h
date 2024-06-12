@@ -14,7 +14,7 @@ class QmlNativeAPI : public QObject{
     Q_OBJECT
 public:
     explicit QmlNativeAPI(QObject* parent = nullptr): QObject(parent){};
-    //获取本地所有IP
+    //get all dongle
     Q_INVOKABLE static QList<QString> GetDongleList(){
       QList<QString> l;
       for (auto &item : WFBReceiver::GetDongleList()){
@@ -22,7 +22,10 @@ public:
       }
       return l;
     };
-
+    Q_INVOKABLE static bool Start(
+        const QString &vidPid, int channel,int channelWidth){
+      return WFBReceiver::Start(vidPid.toStdString(),channel,channelWidth);
+    }
 };
 
 

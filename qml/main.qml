@@ -4,8 +4,8 @@ import realTimePlayer 1.0
 
 ApplicationWindow {
     visible: true
-    width: 960
-    height: 480
+    width: 1024
+    height: 768
     title: qsTr("")
 
     QQuickRealTimePlayer {
@@ -15,7 +15,6 @@ ApplicationWindow {
         width: parent.width - 200
         height:parent.height
         Component.onCompleted: {
-            play("rtsp://10.8.109.230:554/rtp/44050000001310000002");
         }
     }
     Rectangle {
@@ -182,6 +181,14 @@ ApplicationWindow {
                         text: "START"
                         font.pixelSize: 32
                         color: "#ffffff"
+                    }
+                    MouseArea{
+                        cursorShape: Qt.PointingHandCursor
+                        anchors.fill: parent
+                        onClicked: function(){
+                            console.log(selectDev.currentText,Number(selectChannel.currentText),Number(selectBw.currentIndex));
+                            NativeApi.Start(selectDev.currentText,Number(selectChannel.currentText),Number(selectBw.currentIndex));
+                        }
                     }
                 }
             }
