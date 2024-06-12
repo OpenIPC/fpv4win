@@ -295,7 +295,7 @@ ApplicationWindow {
             }
             Rectangle {
                 width:190
-                height:window.height - 450
+                height:window.height - 430
                 color:"#f3f1f1"
                 clip:true
 
