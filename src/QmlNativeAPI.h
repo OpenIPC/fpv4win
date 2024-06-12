@@ -12,6 +12,8 @@
  */
 class QmlNativeAPI : public QObject {
   Q_OBJECT
+  Q_PROPERTY(qulonglong wifiFrameCount READ wifiFrameCount NOTIFY onWifiFrameCount )
+  Q_PROPERTY(qulonglong wfbFrameCount READ wfbFrameCount NOTIFY onWfbFrameCount )
 public:
   static QmlNativeAPI &Instance() {
     static QmlNativeAPI api;
@@ -39,11 +41,24 @@ public:
   void NotifyWifiStop(){
     emit onWifiStop();
   }
-
+  void UpdateCount() {
+    emit onWifiFrameCount(wifiFrameCount_);
+    emit onWfbFrameCount(wfbFrameCount_);
+  }
+  qulonglong wfbFrameCount() {
+    return wfbFrameCount_;
+  }
+  qulonglong wifiFrameCount() {
+    return wifiFrameCount_;
+  }
+  qulonglong wfbFrameCount_ = 0;
+  qulonglong wifiFrameCount_ = 0;
 signals :
   // onlog
   void onLog(QString level, QString msg);
   void onWifiStop();
+  void onWifiFrameCount(qulonglong count);
+  void onWfbFrameCount(qulonglong count);
 };
 
 #endif // CTRLCENTER_QMLNATIVEAPI_H

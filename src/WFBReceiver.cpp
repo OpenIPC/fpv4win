@@ -58,6 +58,11 @@ std::vector<std::string> WFBReceiver::GetDongleList() {
 }
 bool WFBReceiver::Start(const std::string &vidPid, uint8_t channel,
                         int channelWidth,const std::string& kPath) {
+
+  QmlNativeAPI::Instance().wifiFrameCount_ = 0;
+  QmlNativeAPI::Instance().wfbFrameCount_ = 0;
+  QmlNativeAPI::Instance().UpdateCount();
+
   keyPath = kPath;
   if(usbThread){
     return false;
@@ -131,10 +136,15 @@ bool WFBReceiver::Start(const std::string &vidPid, uint8_t channel,
   return true;
 }
 void WFBReceiver::handle80211Frame(const Packet &packet) {
+
+  QmlNativeAPI::Instance().wifiFrameCount_ ++;
   RxFrame frame(packet.Data);
   if (!frame.IsValidWfbFrame()) {
     return;
   }
+  QmlNativeAPI::Instance().wfbFrameCount_ ++;
+  QmlNativeAPI::Instance().UpdateCount();
+
   static int8_t rssi[4] = {1,1,1,1};
   static uint8_t antenna[4] = {1,1,1,1};
 
@@ -166,7 +176,6 @@ bool WFBReceiver::Stop() {
   if(rtlDevice){
     rtlDevice->should_stop = true;
   }
-
   QmlNativeAPI::Instance().NotifyWifiStop();
   return true;
 }

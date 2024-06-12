@@ -258,21 +258,21 @@ ApplicationWindow {
                 Text {
                     id: wfbPktCountText
                     x: 5
-                    text: "0"
-                    font.pixelSize: 32
+                    text: ""+NativeApi.wfbFrameCount
+                    font.pixelSize: 12
                     color: "#000000"
                 }
                 Text {
                     x: 5
                     text: " / "
-                    font.pixelSize: 32
+                    font.pixelSize: 12
                     color: "#000000"
                 }
                 Text {
                     id: airPktCountText
                     x: 5
-                    text: "0"
-                    font.pixelSize: 32
+                    text: ""+NativeApi.wifiFrameCount
+                    font.pixelSize: 12
                     color: "#000000"
                 }
             }
