@@ -17,6 +17,7 @@ libusb_context *WFBReceiver::ctx{};
 libusb_device_handle *WFBReceiver::dev_handle{};
 std::shared_ptr<std::thread> WFBReceiver::usbThread{};
 std::unique_ptr<Rtl8812aDevice> WFBReceiver::rtlDevice;
+std::string  WFBReceiver::keyPath;
 
 std::vector<std::string> WFBReceiver::GetDongleList() {
   std::vector<std::string> list;
@@ -56,8 +57,8 @@ std::vector<std::string> WFBReceiver::GetDongleList() {
   return list;
 }
 bool WFBReceiver::Start(const std::string &vidPid, uint8_t channel,
-                        int channelWidth) {
-
+                        int channelWidth,const std::string& kPath) {
+  keyPath = kPath;
   if(usbThread){
     return false;
   }
@@ -110,8 +111,9 @@ bool WFBReceiver::Start(const std::string &vidPid, uint8_t channel,
                 .ChannelOffset = 0,
                 .ChannelWidth = static_cast<ChannelWidth_t>(channelWidth),
             });
-    }catch (...){
-    }
+    }catch (const std::runtime_error& e){
+      logger->error(e.what());
+    }catch (...){}
     auto rc = libusb_release_interface(dev_handle, 0);
     if (rc < 0) {
       // error
@@ -147,8 +149,8 @@ void WFBReceiver::handle80211Frame(const Packet &packet) {
 
   static std::mutex agg_mutex;
   static std::unique_ptr<Aggregator> video_aggregator = std::make_unique<Aggregator>(
-    "gs.key",epoch,video_channel_id_f,[](uint8_t *payload,uint16_t packet_size) {
-
+    keyPath.c_str(),epoch,video_channel_id_f,[](uint8_t *payload,uint16_t packet_size) {
+      handleRtp(payload,packet_size);
   });
 
   std::lock_guard<std::mutex> lock(agg_mutex);
@@ -156,6 +158,10 @@ void WFBReceiver::handle80211Frame(const Packet &packet) {
     video_aggregator->process_packet(packet.Data.data() + sizeof(ieee80211_header), packet.Data.size() - sizeof(ieee80211_header) - 4, 0, antenna, rssi);
   }
 }
+
+void WFBReceiver::handleRtp(uint8_t *payload, uint16_t packet_size) {
+}
+
 bool WFBReceiver::Stop() {
   if(rtlDevice){
     rtlDevice->should_stop = true;

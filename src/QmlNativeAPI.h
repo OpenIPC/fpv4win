@@ -27,8 +27,8 @@ public:
     return l;
   };
   Q_INVOKABLE static bool Start(const QString &vidPid, int channel,
-                                int channelWidth) {
-    return WFBReceiver::Start(vidPid.toStdString(), channel, channelWidth);
+                                int channelWidth,const QString &keyPath) {
+    return WFBReceiver::Start(vidPid.toStdString(), channel, channelWidth,keyPath.toStdString());
   }
   Q_INVOKABLE static bool Stop() {
     return WFBReceiver::Stop();

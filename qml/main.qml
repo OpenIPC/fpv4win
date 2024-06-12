@@ -1,6 +1,8 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import realTimePlayer 1.0
+import Qt.labs.platform 1.1
+
 
 ApplicationWindow {
     visible: true
@@ -158,6 +160,39 @@ ApplicationWindow {
                 color: "#1c80c9"
 
                 Text {
+                    id: keyText
+                    x: 5
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "Key"
+                    font.pixelSize: 16
+                    color: "#ffffff"
+                }
+            }
+            Column {
+                FileDialog {
+                    id: fileDialog
+                    title: "Select key File"
+                    nameFilters: ["Key Files (*.key)"]
+
+                    onAccepted: {
+                        keySelector.text = file;
+                        keySelector.text = keySelector.text.replace('file:///','')
+                    }
+                }
+                Button {
+                    width: 190
+                    id:keySelector
+                    text: "gs.key"
+                    onClicked: fileDialog.open()
+                }
+            }
+            Rectangle {
+                // Size of the background adapts to the text size plus some padding
+                width: 190
+                height: actionText.height + 10
+                color: "#1c80c9"
+
+                Text {
                     id: actionText
                     x: 5
                     anchors.verticalCenter: parent.verticalCenter
@@ -194,7 +229,7 @@ ApplicationWindow {
                         }
                         onClicked: function(){
                             if(!actionStartText.started){
-                                actionStartText.started = NativeApi.Start(selectDev.currentText,Number(selectChannel.currentText),Number(selectBw.currentIndex));
+                                actionStartText.started = NativeApi.Start(selectDev.currentText,Number(selectChannel.currentText),Number(selectBw.currentIndex),keySelector.text);
                             }else{
                                 NativeApi.Stop();
                             }
