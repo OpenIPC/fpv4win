@@ -12,6 +12,7 @@ find_package(PkgConfig REQUIRED)
 
 find_package(FFmpeg REQUIRED)
 find_package(SDL2 REQUIRED)
+find_package(unofficial-sodium CONFIG REQUIRED)
 pkg_check_modules(LIBUSB REQUIRED IMPORTED_TARGET libusb-1.0)
 include_directories(${FFMPEG_INCLUDE_DIRS})
 
@@ -22,6 +23,7 @@ file(GLOB_RECURSE SRC_LIST
         3rd/rtl8812au-monitor-pcap/*.c
         3rd/rtl8812au-monitor-pcap/*.cpp
         src/*.cpp
+        src/*.c
         src/*.h
 )
 list(FILTER SRC_LIST EXCLUDE REGEX ".*/3rd.*/src/main.cpp")
@@ -29,7 +31,11 @@ list(FILTER SRC_LIST EXCLUDE REGEX ".*/3rd.*/src/main.cpp")
 include_directories(3rd/rtl8812au-monitor-pcap/src 3rd/rtl8812au-monitor-pcap/hal)
 add_executable(${PROJECT_NAME} main.cpp ${SRC_LIST} qml.qrc)
 
-target_link_libraries(${PROJECT_NAME} Qt5::Quick ${FFMPEG_LIBRARIES} ${SDL2_LIBRARIES} PkgConfig::LIBUSB)
+target_link_libraries(${PROJECT_NAME}
+        Qt5::Quick ${FFMPEG_LIBRARIES}
+        ${SDL2_LIBRARIES}
+        PkgConfig::LIBUSB
+        unofficial-sodium::sodium)
 
 if (WIN32 AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
     set(DEBUG_SUFFIX)

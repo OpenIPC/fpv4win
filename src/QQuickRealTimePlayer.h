@@ -6,6 +6,8 @@
 #include "ffmpegDecode.h"
 #include <queue>
 #include <memory>
+#include <thread>
+
 #include "Mp4Encoder.h"
 #include "GifEncoder.h"
 
