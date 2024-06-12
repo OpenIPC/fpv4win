@@ -6,6 +6,7 @@ ApplicationWindow {
     visible: true
     width: 1024
     height: 768
+    id:window
     title: qsTr("")
 
     QQuickRealTimePlayer {
@@ -232,6 +233,8 @@ ApplicationWindow {
                 }
             }
             Rectangle {
+                id:logTitle
+                z:2
                 // Size of the background adapts to the text size plus some padding
                 width: 190
                 height: logText.height + 10
@@ -243,7 +246,51 @@ ApplicationWindow {
                     anchors.verticalCenter: parent.verticalCenter
                     text: "WiFi Driver Log"
                     font.pixelSize: 16
-                    color: "#ffffff"
+                    color: "#9f9b9b"
+                }
+            }
+            Rectangle {
+                width:190
+                height:window.height - 385
+
+                Component {
+                    id: contactDelegate
+                    Item {
+                        width: parent.width;
+                        height:log.height
+                        Row {
+                            padding:2
+                            Text {
+                                id:log
+                                width: 190
+                                wrapMode: Text.Wrap
+                                font.pixelSize: 10
+                                text: '['+level+'] '+msg
+                                color: {
+                                    let colors = {
+                                        error: "#ff0000",
+                                        info: "#00ee6f",
+                                        warn: "#e8c538",
+                                        debug: "#3296de",
+                                    }
+                                    return colors[level];
+                                }
+                            }
+                        }
+                    }
+                }
+
+                ListView {
+                    z:1
+                    anchors.top :logTitle.bottom
+                    anchors.fill: parent
+                    model: ListModel {}
+                    delegate: contactDelegate
+                    Component.onCompleted: {
+                        NativeApi.onLog.connect((level,msg)=>{
+                            model.append({"level": level, "msg": msg});
+                        });
+                    }
                 }
             }
         }

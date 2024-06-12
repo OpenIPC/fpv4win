@@ -3,6 +3,7 @@
 //
 
 #include "WFBReceiver.h"
+#include "QmlNativeAPI.h"
 #include "WiFiDriver.h"
 #include "logger.h"
 
@@ -64,7 +65,10 @@ bool WFBReceiver::Start(const std::string &vidPid, uint8_t channel,
   char c;
   iss >> std::hex >> wifiDeviceVid >> c >> wifiDevicePid;
 
-  auto logger = std::make_shared<Logger>();
+  auto logger = std::make_shared<Logger>(
+      [](const std::string &level, const std::string &msg){
+        QmlNativeAPI::Instance().PutLog(level,msg);
+  });
 
   rc = libusb_init(&ctx);
   if (rc < 0) {
@@ -91,16 +95,19 @@ bool WFBReceiver::Start(const std::string &vidPid, uint8_t channel,
 
   usbThread = std::make_shared<std::thread>([=](){
     WiFiDriver wifi_driver{logger};
-    auto rtlDevice = wifi_driver.CreateRtlDevice(dev_handle);
-    rtlDevice->Init(
-        [](const Packet & p) {
-          handle80211Frame(p);
-        },
-        SelectedChannel{
-            .Channel = channel,
-            .ChannelOffset = 0,
-            .ChannelWidth = static_cast<ChannelWidth_t>(channelWidth),
-        });
+    try{
+      auto rtlDevice = wifi_driver.CreateRtlDevice(dev_handle);
+        rtlDevice->Init(
+            [](const Packet & p) {
+              handle80211Frame(p);
+            },
+            SelectedChannel{
+                .Channel = channel,
+                .ChannelOffset = 0,
+                .ChannelWidth = static_cast<ChannelWidth_t>(channelWidth),
+            });
+    }catch (...){
+    }
   });
   usbThread->detach();
 

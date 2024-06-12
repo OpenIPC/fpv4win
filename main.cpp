@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
     qmlRegisterType<QQuickRealTimePlayer>("realTimePlayer", 1, 0, "QQuickRealTimePlayer");
 
 
-    QmlNativeAPI  qmlNativeApi;
+    auto& qmlNativeApi = QmlNativeAPI::Instance();
     engine.rootContext()->setContextProperty("NativeApi", &qmlNativeApi);
 
     engine.load(QUrl(QStringLiteral("qrc:/qml/main.qml")));
