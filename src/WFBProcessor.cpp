@@ -24,17 +24,17 @@ Aggregator::Aggregator(const string &keypair, uint64_t epoch, uint32_t channel_i
     FILE *fp;
     if((fp = fopen(keypair.c_str(), "r")) == NULL)
     {
-        throw runtime_error(format("Unable to open %s: %s", keypair.c_str(), strerror(errno)));
+        throw runtime_error(format("Unable to open {}: {}", keypair.c_str(), strerror(errno)));
     }
     if (fread(rx_secretkey, crypto_box_SECRETKEYBYTES, 1, fp) != 1)
     {
         fclose(fp);
-        throw runtime_error(format("Unable to read rx secret key: %s", strerror(errno)));
+        throw runtime_error(format("Unable to read rx secret key: {}", strerror(errno)));
     }
     if (fread(tx_publickey, crypto_box_PUBLICKEYBYTES, 1, fp) != 1)
     {
         fclose(fp);
-        throw runtime_error(format("Unable to read tx public key: %s", strerror(errno)));
+        throw runtime_error(format("Unable to read tx public key: {}", strerror(errno)));
     }
     fclose(fp);
 }
