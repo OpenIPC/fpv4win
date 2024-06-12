@@ -279,7 +279,7 @@ ApplicationWindow {
                                 color: {
                                     let colors = {
                                         error: "#ff0000",
-                                        info: "#00ee6f",
+                                        info: "#0f7340",
                                         warn: "#e8c538",
                                         debug: "#3296de",
                                     }
@@ -300,6 +300,7 @@ ApplicationWindow {
                     Component.onCompleted: {
                         NativeApi.onLog.connect((level,msg)=>{
                             model.append({"level": level, "msg": msg});
+                            positionViewAtIndex(count - 1, ListView.End)
                         });
                     }
                 }
