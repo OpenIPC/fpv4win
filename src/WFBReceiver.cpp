@@ -6,9 +6,12 @@
 #include "QmlNativeAPI.h"
 #include "WiFiDriver.h"
 #include "logger.h"
+#include "RxFrame.h"
 
 #include <iomanip>
 #include <sstream>
+
+#define htobe32(x) htonl(x)
 
 libusb_context *WFBReceiver::ctx{};
 libusb_device_handle *WFBReceiver::dev_handle{};
@@ -125,8 +128,43 @@ bool WFBReceiver::Start(const std::string &vidPid, uint8_t channel,
 
   return true;
 }
-void WFBReceiver::handle80211Frame(const Packet &pkt) {
+void WFBReceiver::handle80211Frame(const Packet &packet) {
+  RxFrame frame(packet.Data);
+  if (!frame.IsValidWfbFrame()) {
+    return;
+  }
+  int8_t rssi[4] = {1,1,1,1};
+  uint32_t freq = 0;
+  int8_t noise[4] = {1,1,1,1};
+  uint8_t antenna[4] = {1,1,1,1};
 
+
+  int video_client_port = 5600;
+  int mavlink_client_port = 14550;
+  std::string client_addr = "127.0.0.1";
+  uint32_t link_id = 7669206 ; // sha1 hash of link_domain="default"
+  uint8_t video_radio_port = 0;
+  uint8_t mavlink_radio_port = 0x10;
+  uint64_t epoch = 0;
+
+  uint32_t video_channel_id_f = (link_id << 8) + video_radio_port;
+  auto video_channel_id_be = htobe32(video_channel_id_f);
+  uint32_t mavlink_channel_id_f = (link_id << 8) + mavlink_radio_port;
+  auto mavlink_channel_id_be = htobe32(mavlink_channel_id_f);
+
+  uint8_t* video_channel_id_be8 = reinterpret_cast<uint8_t *>(&video_channel_id_be);
+  uint8_t* mavlink_channel_id_be8 = reinterpret_cast<uint8_t *>(&mavlink_channel_id_be);
+
+  std::mutex agg_mutex;
+  std::unique_ptr<Aggregator> video_aggregator;
+  std::unique_ptr<Aggregator> mavlink_aggregator;
+
+  std::lock_guard<std::mutex> lock(agg_mutex);
+  if (frame.MatchesChannelID(video_channel_id_be8)) {
+    video_aggregator->process_packet(packet.Data.data() + sizeof(ieee80211_header), packet.Data.size() - sizeof(ieee80211_header) - 4, 0, antenna, rssi, noise, freq, 0, 0, NULL);
+  } else if (frame.MatchesChannelID(mavlink_channel_id_be8)) {
+    mavlink_aggregator->process_packet(packet.Data.data() + sizeof(ieee80211_header), packet.Data.size() - sizeof(ieee80211_header) - 4, 0, antenna, rssi, noise, freq, 0, 0, NULL);
+  }
 }
 bool WFBReceiver::Stop() {
   if(rtlDevice){
