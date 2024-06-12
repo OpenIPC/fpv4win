@@ -18,7 +18,7 @@ public:
 class Aggregator : public BaseAggregator
 {
 public:
-    using DataCB = std::function<void()>;
+    using DataCB = std::function<void(uint8_t *payload,uint16_t packet_size)>;
     Aggregator(const std::string &keypair, uint64_t epoch, uint32_t channel_id,const DataCB & cb = nullptr);
     ~Aggregator();
     virtual void process_packet(const uint8_t *buf, size_t size, uint8_t wlan_idx, const uint8_t *antenna, const int8_t *rssi);
@@ -54,6 +54,8 @@ private:
     uint32_t count_p_lost;
     uint32_t count_p_bad;
     uint32_t count_p_override;
+    // on data output
+    DataCB dcb;
 };
 
 

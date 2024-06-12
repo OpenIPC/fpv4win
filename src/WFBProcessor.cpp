@@ -17,7 +17,7 @@ Aggregator::Aggregator(const string &keypair, uint64_t epoch, uint32_t channel_i
     fec_p(NULL), fec_k(-1), fec_n(-1), seq(0), rx_ring_front(0), rx_ring_alloc(0),
     last_known_block((uint64_t)-1), epoch(epoch), channel_id(channel_id),
     count_p_all(0), count_p_dec_err(0), count_p_dec_ok(0), count_p_fec_recovered(0),
-    count_p_lost(0), count_p_bad(0), count_p_override(0)
+    count_p_lost(0), count_p_bad(0), count_p_override(0),dcb(cb)
 {
     memset(session_key, '\0', sizeof(session_key));
 
@@ -425,7 +425,9 @@ void Aggregator::send_packet(int ring_idx, int fragment_idx)
         count_p_bad += 1;
     }else if(!(flags & WFB_PACKET_FEC_ONLY))
     {
-        // send(sockfd, payload, packet_size, MSG_DONTWAIT);
+        if(dcb) {
+            dcb(payload,packet_size);
+        }
     }
 }
 

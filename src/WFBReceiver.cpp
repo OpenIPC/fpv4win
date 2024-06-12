@@ -133,23 +133,23 @@ void WFBReceiver::handle80211Frame(const Packet &packet) {
   if (!frame.IsValidWfbFrame()) {
     return;
   }
-  int8_t rssi[4] = {1,1,1,1};
-  uint8_t antenna[4] = {1,1,1,1};
+  static int8_t rssi[4] = {1,1,1,1};
+  static uint8_t antenna[4] = {1,1,1,1};
 
-  std::string client_addr = "127.0.0.1";
-  uint32_t link_id = 7669206 ; // sha1 hash of link_domain="default"
-  uint8_t video_radio_port = 0;
-  uint8_t mavlink_radio_port = 0x10;
-  uint64_t epoch = 0;
+  static uint32_t link_id = 7669206 ; // sha1 hash of link_domain="default"
+  static uint8_t video_radio_port = 0;
+  static uint64_t epoch = 0;
 
-  uint32_t video_channel_id_f = (link_id << 8) + video_radio_port;
-  auto video_channel_id_be = htobe32(video_channel_id_f);
-  uint32_t mavlink_channel_id_f = (link_id << 8) + mavlink_radio_port;
+  static uint32_t video_channel_id_f = (link_id << 8) + video_radio_port;
+  static auto video_channel_id_be = htobe32(video_channel_id_f);
 
-  uint8_t* video_channel_id_be8 = reinterpret_cast<uint8_t *>(&video_channel_id_be);
+  static uint8_t* video_channel_id_be8 = reinterpret_cast<uint8_t *>(&video_channel_id_be);
 
   static std::mutex agg_mutex;
-  static std::unique_ptr<Aggregator> video_aggregator = std::make_unique<Aggregator>("gs.key",epoch,video_channel_id_f);
+  static std::unique_ptr<Aggregator> video_aggregator = std::make_unique<Aggregator>(
+    "gs.key",epoch,video_channel_id_f,[](uint8_t *payload,uint16_t packet_size) {
+
+  });
 
   std::lock_guard<std::mutex> lock(agg_mutex);
   if (frame.MatchesChannelID(video_channel_id_be8)) {
