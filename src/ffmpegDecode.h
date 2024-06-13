@@ -105,7 +105,7 @@ private:
                     uint8_t *pOutBuffer, size_t nOutBufferSize);
 
     // 解码视频祯
-    bool DecodeVideo(const AVPacket *avpkt,shared_ptr<AVFrame> pOutFrame);
+    bool DecodeVideo(const AVPacket *avpkt,const shared_ptr<AVFrame>& pOutFrame);
 
     //向音频fifo写入数据
     void writeAudioBuff(uint8_t *aSample, size_t aSize);

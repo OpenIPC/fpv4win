@@ -217,7 +217,7 @@ bool FFmpegDecoder::OpenVideo() {
 }
 
 bool FFmpegDecoder::DecodeVideo(const AVPacket *avpkt,
-                                shared_ptr<AVFrame> pOutFrame) {
+                                const shared_ptr<AVFrame>& pOutFrame) {
   bool res = false;
 
   if (pVideoCodecCtx && avpkt && pOutFrame) {
