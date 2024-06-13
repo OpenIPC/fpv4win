@@ -25,6 +25,13 @@ Supported rtl8812au wifi adapter only
 
 ![img.png](img/delay.jpg)
 
+### Todo
+- OSD
+- Hardware acceleration decoding
+- Streaming to RTMP/RTSP/SRT/WHIP server
+- Receive multiple video streams using a single adapter
+- Onvif/GB28181/SIP client
+
 ### How to build
 - take a look for 
 [GithubAction](https://github.com/TalusL/fpv-wfb/blob/main/.github/workflows/msbuild.yml)
