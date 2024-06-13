@@ -43,6 +43,7 @@ bool FFmpegDecoder::OpenInput(string &inputFile) {
 
   // 分析超时，退出，可能格式不正确
   if(QDateTime::currentDateTime().toSecsSinceEpoch() - *startTime > timeout){
+    CloseInput();
     return false;
   }
   pFormatCtx->interrupt_callback.callback = nullptr;
