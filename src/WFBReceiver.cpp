@@ -13,11 +13,14 @@
 #include <mutex>
 #include <sstream>
 
+#include "Rtp.h"
+
 libusb_context *WFBReceiver::ctx{};
 libusb_device_handle *WFBReceiver::dev_handle{};
 std::shared_ptr<std::thread> WFBReceiver::usbThread{};
 std::unique_ptr<Rtl8812aDevice> WFBReceiver::rtlDevice;
 std::string  WFBReceiver::keyPath;
+shared_ptr<QUdpSocket> WFBReceiver::udpSocket;
 
 std::vector<std::string> WFBReceiver::GetDongleList() {
   std::vector<std::string> list;
@@ -171,11 +174,31 @@ void WFBReceiver::handle80211Frame(const Packet &packet) {
 }
 
 void WFBReceiver::handleRtp(uint8_t *payload, uint16_t packet_size) {
+  if(rtlDevice->should_stop){
+    return;
+  }
+  if(packet_size < 12){
+    return;
+  }
+  auto *header = (RtpHeader *)payload;
+  if(!udpSocket){
+    udpSocket = make_shared<QUdpSocket>();
+    udpSocket->bind();
+    QmlNativeAPI::Instance().NotifyRtpStream(header->pt, ntohl(header->ssrc));
+  }
+  // send video to player
+  udpSocket->writeDatagram(
+      reinterpret_cast<const char *>(payload),packet_size,
+      QHostAddress::LocalHost,QmlNativeAPI::Instance().playerPort);
 }
 
 bool WFBReceiver::Stop() {
   if(rtlDevice){
     rtlDevice->should_stop = true;
+  }
+  if(udpSocket){
+    udpSocket->close();
+    udpSocket->reset();
   }
   QmlNativeAPI::Instance().NotifyWifiStop();
   return true;

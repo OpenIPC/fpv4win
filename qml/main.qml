@@ -18,6 +18,9 @@ ApplicationWindow {
         width: parent.width - 200
         height:parent.height
         Component.onCompleted: {
+            NativeApi.onRtpStream.connect((sdpFile)=>{
+                play(sdpFile)
+            });
         }
     }
     Rectangle {
@@ -237,13 +240,9 @@ ApplicationWindow {
                                     keySelector.text,
                                     selectCodec.currentText
                                 );
-                                const sdp = "sdp.sdp";
-                                NativeApi.BuildSdp(sdp,selectCodec.currentText,96,56633);
-                                player.stop();
-                                player.play(sdp);
                             }else{
-                                player.stop();
                                 NativeApi.Stop();
+                                player.stop();
                             }
                         }
                     }

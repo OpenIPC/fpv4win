@@ -35,9 +35,7 @@ public:
   Q_INVOKABLE static bool Start(const QString &vidPid, int channel,
                                 int channelWidth,const QString &keyPath,
                                 const QString &codec) {
-    // get free port
     QmlNativeAPI::Instance().playerCodec = codec;
-    QmlNativeAPI::Instance().playerPort = QmlNativeAPI::Instance().GetFreePort();
     return WFBReceiver::Start(vidPid.toStdString(), channel, channelWidth,keyPath.toStdString());
   }
   Q_INVOKABLE static bool Stop() {
@@ -70,6 +68,14 @@ public:
   }
   void NotifyWifiStop(){
     emit onWifiStop();
+  }
+  int NotifyRtpStream(int pt,uint16_t ssrc){
+    // get free port
+    const QString sdpFile = "sdp/sdp.sdp";
+    QmlNativeAPI::Instance().playerPort = QmlNativeAPI::Instance().GetFreePort();
+    BuildSdp(sdpFile,playerCodec,pt,playerPort);
+    emit onRtpStream(sdpFile);
+    return QmlNativeAPI::Instance().playerPort;
   }
   void UpdateCount() {
     emit onWifiFrameCount(wifiFrameCount_);
@@ -105,6 +111,7 @@ signals :
   void onWifiStop();
   void onWifiFrameCount(qulonglong count);
   void onWfbFrameCount(qulonglong count);
+  void onRtpStream(QString sdp);
 };
 
 #endif // CTRLCENTER_QMLNATIVEAPI_H

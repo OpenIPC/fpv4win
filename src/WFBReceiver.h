@@ -6,6 +6,7 @@
 #define WFBRECEIVER_H
 #include "FrameParser.h"
 #include "Rtl8812aDevice.h"
+#include <QUdpSocket>
 #include <libusb.h>
 #include <string>
 #include <thread>
@@ -27,6 +28,7 @@ protected:
   static std::shared_ptr<std::thread> usbThread;
   static std::unique_ptr<Rtl8812aDevice> rtlDevice;
   static std::string keyPath;
+  static std::shared_ptr<QUdpSocket> udpSocket;
 };
 
 #endif // WFBRECEIVER_H

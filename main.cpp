@@ -4,6 +4,8 @@
 #include <src/QQuickRealTimePlayer.h>
 #include<QQmlContext>
 
+#pragma comment(lib, "ws2_32.lib")
+
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
