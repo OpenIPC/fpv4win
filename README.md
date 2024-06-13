@@ -10,14 +10,17 @@ Supported rtl8812au wifi adapter only
 
 ![img.png](img/img.png)
 
-### usage
+### Usage
 - download [Zadig](https://github.com/pbatard/libwdi/releases/download/v1.5.0/zadig-2.8.exe)
 - Repair libusb driver
 
 ![img.png](img/img1.png)
 
-- select an 8812au adapter
+- select you 8812au adapter
 - select your wfb key
-- select your channel
+- select your drone channel
 - enjoy
 
+### How to build
+- take a look for 
+[GithubAction](https://github.com/TalusL/fpv-wfb/blob/main/.github/workflows/msbuild.yml)
