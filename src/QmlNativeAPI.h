@@ -5,6 +5,8 @@
 #ifndef CTRLCENTER_QMLNATIVEAPI_H
 #define CTRLCENTER_QMLNATIVEAPI_H
 #include "WFBReceiver.h"
+#include <QDir>
+#include <QFileInfo>
 #include <QObject>
 #include <QUdpSocket>
 #include <fstream>
@@ -41,8 +43,13 @@ public:
   Q_INVOKABLE static bool Stop() {
     return WFBReceiver::Stop();
   }
-  Q_INVOKABLE static void BuildSdp(const QString &path,const QString &codec,int payloadType,int port) {
-    std::ofstream sdpFos(path.toStdString());
+  Q_INVOKABLE static void BuildSdp(const QString &filePath,const QString &codec,int payloadType,int port) {
+    QString dirPath = QFileInfo(filePath).absolutePath();
+    QDir dir(dirPath);
+    if (!dir.exists()) {
+      dir.mkpath(dirPath);
+    }
+    std::ofstream sdpFos(filePath.toStdString());
     sdpFos<<"v=0\n";
     sdpFos<<"o=- 0 0 IN IP4 127.0.0.1\n";
     sdpFos<<"s=No Name\n";
