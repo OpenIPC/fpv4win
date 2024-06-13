@@ -51,6 +51,18 @@ std::vector<std::string> WFBReceiver::GetDongleList() {
       }
     }
   }
+  std::sort(list.begin(), list.end(), [](std::string& a,std::string& b){
+    static std::vector<std::string> specialStrings = {"0b05:17d2", "0bda:8812","0bda:881a"};
+    auto itA = std::find(specialStrings.begin(), specialStrings.end(), a);
+    auto itB = std::find(specialStrings.begin(), specialStrings.end(), b);
+    if (itA != specialStrings.end() && itB == specialStrings.end()) {
+      return true;
+    }
+    if (itB != specialStrings.end() && itA == specialStrings.end()) {
+      return false;
+    }
+    return a < b;
+  });
 
   // Free the list of devices
   libusb_free_device_list(devs, 1);
