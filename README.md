@@ -21,6 +21,10 @@ Supported rtl8812au wifi adapter only
 - select your drone channel
 - enjoy
 
+### Delay test
+
+![img.png](img/delay.jpg)
+
 ### How to build
 - take a look for 
 [GithubAction](https://github.com/TalusL/fpv-wfb/blob/main/.github/workflows/msbuild.yml)
