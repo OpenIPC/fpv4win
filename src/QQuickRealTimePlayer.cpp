@@ -69,7 +69,7 @@ QQuickRealTimePlayer::QQuickRealTimePlayer(QQuickItem *parent)
     : QQuickFramebufferObject(parent) {
   SDL_Init(SDL_INIT_AUDIO);
   // 按每秒60帧的帧率更新界面
-  startTimer(1000 / 60);
+  startTimer(1000 / 100);
 }
 
 void QQuickRealTimePlayer::timerEvent(QTimerEvent *event) {
