@@ -42,7 +42,7 @@ jobs:
            cd vcpkg &&
            .\bootstrap-vcpkg.bat &&
            .\vcpkg integrate install &&
-           .\vcpkg install libusb libpcap ffmpeg qt5 sdl2 vcpkg-tool-ninja &&
+           .\vcpkg install libusb libpcap libsodium ffmpeg qt5 sdl2 vcpkg-tool-ninja &&
            cd .. &&
            cmake "-DCMAKE_TOOLCHAIN_FILE=D:/a/fpv-wfb/fpv-wfb/vcpkg/scripts/buildsystems/vcpkg.cmake" -S ./ -B "build" &&
            cmake --build build --config Release --target fpv-wfb
