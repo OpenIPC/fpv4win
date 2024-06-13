@@ -8,6 +8,8 @@ fpv-wfb is an app for windows packaging multiple pieces together to decode an H2
  
 Supported rtl8812au wifi adapter only 
 
+It is recommended to use with [OpenIPC](https://github.com/OpenIPC) FPV
+
 ![img.png](img/img.png)
 
 ### Usage
