@@ -138,6 +138,7 @@ bool WFBReceiver::Start(const std::string &vidPid, uint8_t channel,
 void WFBReceiver::handle80211Frame(const Packet &packet) {
 
   QmlNativeAPI::Instance().wifiFrameCount_ ++;
+  QmlNativeAPI::Instance().UpdateCount();
   RxFrame frame(packet.Data);
   if (!frame.IsValidWfbFrame()) {
     return;
