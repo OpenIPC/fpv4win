@@ -1,5 +1,5 @@
 # WiFi Broadcast FPV client for Windows platform.
-- RTL8812AU
+
 
 fpv-wfb is an app for windows packaging multiple pieces together to decode an H264/H265 video feed broadcast by wfb-ng over the air.
 
