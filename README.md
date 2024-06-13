@@ -28,6 +28,8 @@ Supported rtl8812au wifi adapter only
 ### Todo
 - OSD
 - Hardware acceleration decoding
+- Record MP4 file
+- Capture frame to JPG
 - Streaming to RTMP/RTSP/SRT/WHIP server
 - Receive multiple video streams using a single adapter
 - Onvif/GB28181/SIP client
