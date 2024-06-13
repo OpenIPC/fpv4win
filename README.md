@@ -12,7 +12,7 @@ Supported rtl8812au wifi adapter only
 
 ### Usage
 - download [Zadig](https://github.com/pbatard/libwdi/releases/download/v1.5.0/zadig-2.8.exe)
-- Repair libusb driver
+- Repair libusb driver( maybe need enable ```[options]->[list all devices]``` to show your adapter)
 
 ![img.png](img/img1.png)
 
