@@ -43,13 +43,13 @@ public:
   }
   Q_INVOKABLE static void BuildSdp(const QString &path,const QString &codec,int payloadType,int port) {
     std::ofstream sdpFos(path.toStdString());
-    sdpFos<<"v=0\r\n";
-    sdpFos<<"o=- 0 0 IN IP4 127.0.0.1\r\n";
-    sdpFos<<"s=No Name\r\n";
-    sdpFos<<"c=IN IP4 127.0.0.1\r\n";
-    sdpFos<<"t=0 0\r\n";
-    sdpFos<<"m=video "<<port<<" RTP/AVP "<<payloadType<<"\r\n";
-    sdpFos<<"a=rtpmap:"<<payloadType<<" "<<codec.toStdString()<<"/90000\r\n";
+    sdpFos<<"v=0\n";
+    sdpFos<<"o=- 0 0 IN IP4 127.0.0.1\n";
+    sdpFos<<"s=No Name\n";
+    sdpFos<<"c=IN IP4 127.0.0.1\n";
+    sdpFos<<"t=0 0\n";
+    sdpFos<<"m=video "<<port<<" RTP/AVP "<<payloadType<<"\n";
+    sdpFos<<"a=rtpmap:"<<payloadType<<" "<<codec.toStdString()<<"/90000\n";
     sdpFos.flush();
     sdpFos.close();
     // log
