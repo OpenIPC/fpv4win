@@ -225,12 +225,24 @@ ApplicationWindow {
                         Component.onCompleted: {
                             NativeApi.onWifiStop.connect(()=>{
                                 actionStartText.started = false;
+                                player.stop();
                             });
                         }
                         onClicked: function(){
                             if(!actionStartText.started){
-                                actionStartText.started = NativeApi.Start(selectDev.currentText,Number(selectChannel.currentText),Number(selectBw.currentIndex),keySelector.text);
+                                actionStartText.started = NativeApi.Start(
+                                    selectDev.currentText,
+                                    Number(selectChannel.currentText),
+                                    Number(selectBw.currentIndex),
+                                    keySelector.text,
+                                    selectCodec.currentText
+                                );
+                                const sdp = "sdp.sdp";
+                                NativeApi.BuildSdp(sdp,selectCodec.currentText,96,56633);
+                                player.stop();
+                                player.play(sdp);
                             }else{
+                                player.stop();
                                 NativeApi.Stop();
                             }
                         }
