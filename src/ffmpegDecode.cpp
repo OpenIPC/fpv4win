@@ -2,6 +2,7 @@
 #include <QThread>
 #include <iostream>
 #include <vector>
+#include <QDateTime>
 
 #define min(a, b) (a > b ? b : a)
 
@@ -24,14 +25,28 @@ bool FFmpegDecoder::OpenInput(string &inputFile) {
     CloseInput();
     return false;
   }
+  // 超时机制
+  static const int timeout = 10;
+  auto startTime = std::make_shared<uint64_t >();
+  *startTime = QDateTime::currentDateTime().toSecsSinceEpoch();
+  pFormatCtx->interrupt_callback.callback = [](void *ctx)->int {
+    uint64_t now = QDateTime::currentDateTime().toSecsSinceEpoch();
+    return now - *(uint64_t *)ctx > timeout;
+  };
+  pFormatCtx->interrupt_callback.opaque = startTime.get();
 
-  // 分析输入流
-  pFormatCtx->max_analyze_duration = 32;
-  //    pFormatCtx->probesize = 0;
+
   if (avformat_find_stream_info(pFormatCtx, nullptr) < 0) {
     CloseInput();
     return false;
   }
+
+  // 分析超时，退出，可能格式不正确
+  if(QDateTime::currentDateTime().toSecsSinceEpoch() - *startTime > timeout){
+    return false;
+  }
+  pFormatCtx->interrupt_callback.callback = nullptr;
+  pFormatCtx->interrupt_callback.opaque = nullptr;
 
   // 打开视频/音频输入
   hasVideoStream = OpenVideo();
