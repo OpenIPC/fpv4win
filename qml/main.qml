@@ -275,7 +275,7 @@ ApplicationWindow {
                 }
                 Text {
                     x: 5
-                    text: " / "
+                    text: "/"
                     font.pixelSize: 16
                     color: "#000000"
                 }
@@ -288,7 +288,7 @@ ApplicationWindow {
                 }
                 Text {
                     x: 5
-                    text: " / "
+                    text: "/"
                     font.pixelSize: 16
                     color: "#000000"
                 }
