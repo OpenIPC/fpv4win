@@ -64,6 +64,7 @@ bool WFBReceiver::Start(const std::string &vidPid, uint8_t channel,
 
   QmlNativeAPI::Instance().wifiFrameCount_ = 0;
   QmlNativeAPI::Instance().wfbFrameCount_ = 0;
+  QmlNativeAPI::Instance().rtpPktCount_ = 0;
   QmlNativeAPI::Instance().UpdateCount();
 
   keyPath = kPath;
@@ -174,6 +175,8 @@ void WFBReceiver::handle80211Frame(const Packet &packet) {
 }
 
 void WFBReceiver::handleRtp(uint8_t *payload, uint16_t packet_size) {
+  QmlNativeAPI::Instance().rtpPktCount_ ++;
+  QmlNativeAPI::Instance().UpdateCount();
   if(rtlDevice->should_stop){
     return;
   }

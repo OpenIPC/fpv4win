@@ -258,7 +258,7 @@ ApplicationWindow {
                     id: countText
                     x: 5
                     anchors.verticalCenter: parent.verticalCenter
-                    text: "WFB Pkt / 802.11 Pkt"
+                    text: "Packet(RTP/WFB/802.11)"
                     font.pixelSize: 16
                     color: "#ffffff"
                 }
@@ -266,6 +266,19 @@ ApplicationWindow {
             Row {
                 padding:5
                 width: 190
+                Text {
+                    id: rtpPktCountText
+                    x: 5
+                    text: ""+NativeApi.rtpPktCount
+                    font.pixelSize: 16
+                    color: "#000000"
+                }
+                Text {
+                    x: 5
+                    text: " / "
+                    font.pixelSize: 16
+                    color: "#000000"
+                }
                 Text {
                     id: wfbPktCountText
                     x: 5

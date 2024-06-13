@@ -18,6 +18,7 @@ class QmlNativeAPI : public QObject {
   Q_OBJECT
   Q_PROPERTY(qulonglong wifiFrameCount READ wifiFrameCount NOTIFY onWifiFrameCount )
   Q_PROPERTY(qulonglong wfbFrameCount READ wfbFrameCount NOTIFY onWfbFrameCount )
+  Q_PROPERTY(qulonglong rtpPktCount READ rtpPktCount NOTIFY onRtpPktCount )
 public:
   static QmlNativeAPI &Instance() {
     static QmlNativeAPI api;
@@ -80,9 +81,13 @@ public:
   void UpdateCount() {
     emit onWifiFrameCount(wifiFrameCount_);
     emit onWfbFrameCount(wfbFrameCount_);
+    emit onRtpPktCount(rtpPktCount_);
   }
   qulonglong wfbFrameCount() {
     return wfbFrameCount_;
+  }
+  qulonglong rtpPktCount() {
+    return rtpPktCount_;
   }
   qulonglong wifiFrameCount() {
     return wifiFrameCount_;
@@ -103,6 +108,7 @@ public:
   }
   qulonglong wfbFrameCount_ = 0;
   qulonglong wifiFrameCount_ = 0;
+  qulonglong rtpPktCount_ = 0;
   int playerPort = 0;
   QString playerCodec;
 signals :
@@ -111,6 +117,7 @@ signals :
   void onWifiStop();
   void onWifiFrameCount(qulonglong count);
   void onWfbFrameCount(qulonglong count);
+  void onRtpPktCount(qulonglong count);
   void onRtpStream(QString sdp);
 };
 
