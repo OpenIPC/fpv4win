@@ -190,6 +190,11 @@ void QQuickRealTimePlayer::play(const QString &playUrl) {
 
 void QQuickRealTimePlayer::stop() {
   playStop = true;
+  if(decoder->pFormatCtx) {
+    decoder->pFormatCtx->interrupt_callback.callback = [](void*) {
+      return 1;
+    };
+  }
   if (analysisThread.joinable()) {
     analysisThread.join();
   }
@@ -205,6 +210,7 @@ void QQuickRealTimePlayer::stop() {
   if (decoder) {
     decoder->CloseInput();
   }
+
 }
 
 void QQuickRealTimePlayer::setMuted(bool muted) {

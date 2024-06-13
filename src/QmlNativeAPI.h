@@ -10,6 +10,7 @@
 #include <QObject>
 #include <QUdpSocket>
 #include <fstream>
+#include <future>
 
 /**
  * C++封装留给qml使用的api
@@ -28,7 +29,7 @@ public:
   // get all dongle
   Q_INVOKABLE static QList<QString> GetDongleList() {
     QList<QString> l;
-    for (auto &item : WFBReceiver::GetDongleList()) {
+    for (auto &item : WFBReceiver::Instance().GetDongleList()) {
       l.push_back(QString(item.c_str()));
     }
     return l;
@@ -36,11 +37,15 @@ public:
   Q_INVOKABLE static bool Start(const QString &vidPid, int channel,
                                 int channelWidth,const QString &keyPath,
                                 const QString &codec) {
+    QmlNativeAPI::Instance().playerPort = QmlNativeAPI::Instance().GetFreePort();
     QmlNativeAPI::Instance().playerCodec = codec;
-    return WFBReceiver::Start(vidPid.toStdString(), channel, channelWidth,keyPath.toStdString());
+    return WFBReceiver::Instance().Start(vidPid.toStdString(), channel, channelWidth,keyPath.toStdString());
   }
   Q_INVOKABLE static bool Stop() {
-    return WFBReceiver::Stop();
+    std::async([]() {
+      WFBReceiver::Instance().Stop();
+    });
+    return true;
   }
   Q_INVOKABLE static void BuildSdp(const QString &filePath,const QString &codec,int payloadType,int port) {
     QString dirPath = QFileInfo(filePath).absolutePath();
@@ -73,7 +78,6 @@ public:
   int NotifyRtpStream(int pt,uint16_t ssrc){
     // get free port
     const QString sdpFile = "sdp/sdp.sdp";
-    QmlNativeAPI::Instance().playerPort = QmlNativeAPI::Instance().GetFreePort();
     BuildSdp(sdpFile,playerCodec,pt,playerPort);
     emit onRtpStream(sdpFile);
     return QmlNativeAPI::Instance().playerPort;
@@ -99,12 +103,7 @@ public:
     return playerCodec;
   }
   int GetFreePort(){
-    // bind any port
-    QUdpSocket udpSocket(this);
-    udpSocket.bind(QHostAddress::Any,0,QAbstractSocket::DefaultForPlatform);
-    auto port = udpSocket.localPort();
-    udpSocket.close();
-    return port;
+    return 52356;
   }
   qulonglong wfbFrameCount_ = 0;
   qulonglong wifiFrameCount_ = 0;

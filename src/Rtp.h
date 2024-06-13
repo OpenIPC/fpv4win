@@ -13,7 +13,8 @@
 
 class RtpHeader {
 public:
-#if __BYTE_ORDER == __BIG_ENDIAN
+#if   defined(__BYTE_ORDER) && __BYTE_ORDER == __BIG_ENDIAN || \
+        defined(_WIN32) && REG_DWORD == REG_DWORD_BIG_ENDIAN
   //版本号，固定为2
   uint32_t version: 2;
   //padding

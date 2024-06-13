@@ -15,13 +15,6 @@
 
 #include "Rtp.h"
 
-libusb_context *WFBReceiver::ctx{};
-libusb_device_handle *WFBReceiver::dev_handle{};
-std::shared_ptr<std::thread> WFBReceiver::usbThread{};
-std::unique_ptr<Rtl8812aDevice> WFBReceiver::rtlDevice;
-std::string  WFBReceiver::keyPath;
-shared_ptr<QUdpSocket> WFBReceiver::udpSocket;
-
 std::vector<std::string> WFBReceiver::GetDongleList() {
   std::vector<std::string> list;
 
@@ -125,7 +118,7 @@ bool WFBReceiver::Start(const std::string &vidPid, uint8_t channel,
         rtlDevice = wifi_driver.CreateRtlDevice(dev_handle);
         rtlDevice->Init(
             [](const Packet & p) {
-              handle80211Frame(p);
+              WFBReceiver::Instance().handle80211Frame(p);
             },
             SelectedChannel{
                 .Channel = channel,
@@ -177,7 +170,7 @@ void WFBReceiver::handle80211Frame(const Packet &packet) {
   static std::mutex agg_mutex;
   static std::unique_ptr<Aggregator> video_aggregator = std::make_unique<Aggregator>(
     keyPath.c_str(),epoch,video_channel_id_f,[](uint8_t *payload,uint16_t packet_size) {
-      handleRtp(payload,packet_size);
+      WFBReceiver::Instance().handleRtp(payload,packet_size);
   });
 
   std::lock_guard<std::mutex> lock(agg_mutex);
@@ -186,6 +179,8 @@ void WFBReceiver::handle80211Frame(const Packet &packet) {
   }
 }
 
+static unsigned long long  sendFd = INVALID_SOCKET;
+static volatile bool playing = false;
 void WFBReceiver::handleRtp(uint8_t *payload, uint16_t packet_size) {
   QmlNativeAPI::Instance().rtpPktCount_ ++;
   QmlNativeAPI::Instance().UpdateCount();
@@ -195,29 +190,44 @@ void WFBReceiver::handleRtp(uint8_t *payload, uint16_t packet_size) {
   if(packet_size < 12){
     return;
   }
+
+  sockaddr_in serverAddr{};
+  serverAddr.sin_family = AF_INET;
+  serverAddr.sin_port = htons(QmlNativeAPI::Instance().playerPort);
+  serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+
   auto *header = (RtpHeader *)payload;
-  if(!udpSocket){
-    udpSocket = make_shared<QUdpSocket>();
-    udpSocket->bind();
+  if(!playing){
+    playing = true;
     QmlNativeAPI::Instance().NotifyRtpStream(header->pt, ntohl(header->ssrc));
   }
+
   // send video to player
-  udpSocket->writeDatagram(
-      reinterpret_cast<const char *>(payload),packet_size,
-      QHostAddress::LocalHost,QmlNativeAPI::Instance().playerPort);
+  sendto(sendFd, reinterpret_cast<const char *>(payload), packet_size, 0, (sockaddr*)&serverAddr, sizeof(serverAddr));
 }
 
 bool WFBReceiver::Stop() {
+  playing = false;
   if(rtlDevice){
     rtlDevice->should_stop = true;
   }
-  if(udpSocket){
-    udpSocket->close();
-    udpSocket->reset();
-  }
   QmlNativeAPI::Instance().NotifyWifiStop();
+
   return true;
 }
+
+WFBReceiver::WFBReceiver() {
+  WSADATA wsaData;
+  if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+    std::cerr << "WSAStartup failed." << std::endl;
+    return;
+  }
+  sendFd = socket(AF_INET, SOCK_DGRAM, 0);
+}
+
 WFBReceiver::~WFBReceiver() {
+  closesocket(sendFd);
+  sendFd = INVALID_SOCKET;
+  WSACleanup();
   Stop();
 }
