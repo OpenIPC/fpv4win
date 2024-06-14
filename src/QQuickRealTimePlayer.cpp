@@ -191,7 +191,7 @@ void QQuickRealTimePlayer::play(const QString &playUrl) {
 
 void QQuickRealTimePlayer::stop() {
   playStop = true;
-  if(decoder->pFormatCtx) {
+  if(decoder&&decoder->pFormatCtx) {
     decoder->pFormatCtx->interrupt_callback.callback = [](void*) {
       return 1;
     };
