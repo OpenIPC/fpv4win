@@ -37,15 +37,18 @@ jobs:
       working-directory: ${{env.GITHUB_WORKSPACE}}
       # Add additional options to the MSBuild command line here (like platform or verbosity level).
       # See https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
-      run: git clone https://github.com/Microsoft/vcpkg.git &&
-           git submodule update --init &&
-           cd vcpkg &&
-           .\bootstrap-vcpkg.bat &&
-           .\vcpkg integrate install &&
-           .\vcpkg install libusb libpcap libsodium ffmpeg qt5 sdl2 vcpkg-tool-ninja &&
-           cd .. &&
-           cmake "-DCMAKE_TOOLCHAIN_FILE=D:/a/fpv-wfb/fpv-wfb/vcpkg/scripts/buildsystems/vcpkg.cmake" -S ./ -B "build" &&
-           cmake --build build --config Release --target fpv-wfb
+      run: |
+        git submodule update --init
+        git clone https://github.com/Microsoft/vcpkg.git
+        cd vcpkg
+        .\bootstrap-vcpkg.bat
+        .\vcpkg integrate install
+        .\vcpkg install libusb libpcap libsodium ffmpeg qt5 sdl2 vcpkg-tool-ninja
+        cd ..
+        cmake "-DCMAKE_TOOLCHAIN_FILE=D:/a/fpv-wfb/fpv-wfb/vcpkg/scripts/buildsystems/vcpkg.cmake" -S ./ -B "build"
+        cmake --build build --config Release --target fpv-wfb
+        cp gs.key build/Release/
+        Invoke-WebRequest -Uri https://github.com/pbatard/libwdi/releases/download/v1.5.0/zadig-2.8.exe -OutFile build/Release/zadig-2.8.exe
 
     - name: Deploy
       uses: actions/upload-artifact@v4
