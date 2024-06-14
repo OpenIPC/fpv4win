@@ -25,7 +25,7 @@ It is recommended to use with [OpenIPC](https://github.com/OpenIPC) FPV
 
 ### Delay test
 
-![img.png](img/delay.jpg)
+![img.png](img/delay.png)
 
 ### Todo
 - OSD
