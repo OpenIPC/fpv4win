@@ -19,6 +19,12 @@ include_directories(${FFMPEG_INCLUDE_DIRS})
 find_package(Qt5 COMPONENTS Quick Multimedia  REQUIRED)
 
 
+if(CMAKE_BUILD_TYPE MATCHES "Debug")
+    message("build debug")
+    add_definitions(-DDEBUG_MODE)
+endif()
+
+
 file(GLOB_RECURSE SRC_LIST
         3rd/rtl8812au-monitor-pcap/*.c
         3rd/rtl8812au-monitor-pcap/*.cpp
