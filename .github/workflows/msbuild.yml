@@ -33,6 +33,15 @@ jobs:
     - name: Add MSBuild to PATH
       uses: ilammy/msvc-dev-cmd@v1.4.1
 
+    - name: Set up cache for vcpkg/installed
+      id: cache-vcpkg
+      uses: actions/cache@v3
+      with:
+        path: vcpkg/installed
+        key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg/installed/**/*') }}
+        restore-keys: |
+          ${{ runner.os }}-vcpkg-
+
     - name: Build
       working-directory: ${{env.GITHUB_WORKSPACE}}
       # Add additional options to the MSBuild command line here (like platform or verbosity level).
