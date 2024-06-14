@@ -62,6 +62,7 @@ jobs:
         cmake --build build --config Release --target fpv-wfb
         cp gs.key build/Release/
         Invoke-WebRequest -Uri https://github.com/pbatard/libwdi/releases/download/v1.5.0/zadig-2.8.exe -OutFile build/Release/zadig-2.8.exe
+        Invoke-WebRequest -Uri https://download.visualstudio.microsoft.com/download/pr/10912041/cee5d6bca2ddbcd039da727bf4acb48a/vcredist_x64.exe -OutFile build/Release/vcredist_x64.exe
 
     - name: Deploy
       uses: actions/upload-artifact@v4

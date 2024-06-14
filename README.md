@@ -18,10 +18,11 @@ It is recommended to use with [OpenIPC](https://github.com/OpenIPC) FPV
 
     ![img.png](img/img1.png)
 
-- 3. Select your 8812au adapter.
-- 4. Select your WFB key.
-- 5. Select your drone channel.
-- 6. Enjoy!
+- 3. Install [vcredist_x64.exe](https://download.visualstudio.microsoft.com/download/pr/10912041/cee5d6bca2ddbcd039da727bf4acb48a/vcredist_x64.exe)
+- 4. Select your 8812au adapter.
+- 5. Select your WFB key.
+- 6. Select your drone channel.
+- 7. Enjoy!
 
 ### Delay test
 
