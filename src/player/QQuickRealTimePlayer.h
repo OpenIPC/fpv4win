@@ -50,7 +50,7 @@ public:
     //静音
     Q_INVOKABLE void setMuted(bool muted = false);
     //截图
-    Q_INVOKABLE bool captureJpeg();
+    Q_INVOKABLE QString captureJpeg();
     //录像
     Q_INVOKABLE bool startRecord();
     Q_INVOKABLE void stopRecord();

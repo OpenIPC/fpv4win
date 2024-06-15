@@ -11,6 +11,8 @@ ApplicationWindow {
     id:window
     title: qsTr("")
 
+
+
     QQuickRealTimePlayer {
         x: 0
         y: 0
@@ -18,22 +20,33 @@ ApplicationWindow {
         width: parent.width - 200
         height:parent.height
         Component.onCompleted: {
+            player.play('rtmp://10.8.109.230:1935/rtp/44050000001310000001?userId=253774045377')
             NativeApi.onRtpStream.connect((sdpFile)=>{
                 play(sdpFile)
             });
+        }
+        TipsBox{
+            id:tips
+            z:999
+            tips:''
         }
         Rectangle {
             width: parent.width
             height:30
             anchors.bottom : parent.bottom
-            color: '#33cccccc'
+            color: Qt.rgba(0,0,0,0.3)
+            border.color: "#55222222"
+            border.width: 1
             Row{
                 anchors.fill:parent
                 padding:5
+                spacing:5
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     text: "0bps"
                     font.pixelSize: 12
+                    width:60
+                    horizontalAlignment: Text.Center
                     color: "#ffffff"
                     Component.onCompleted: {
                         player.onBitrate.connect((btr)=>{
@@ -45,6 +58,34 @@ ApplicationWindow {
                                 text = btr+ 'bps';
                             }
                         });
+                    }
+                }
+                Rectangle {
+                    height:20
+                    width:30
+                    radius:5
+                    color: "#55222222"
+                    border.color: "#88ffffff"
+                    border.width: 1
+                    Text {
+                        horizontalAlignment: Text.Center
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: "JPG"
+                        font.pixelSize: 12
+                        color: "#ffffff"
+                    }
+                    MouseArea {
+                        cursorShape: Qt.PointingHandCursor
+                        anchors.fill: parent
+                        onClicked:{
+                            let f = player.captureJpeg();
+                            if(f!==''){
+                                tips.showPop('Saved '+f,3000);
+                            }else{
+                                tips.showPop('Capture failed! '+f,3000);
+                            }
+                        }
                     }
                 }
             }
