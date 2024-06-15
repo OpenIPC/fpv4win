@@ -266,12 +266,6 @@ void usleep(int micro_seconds) {
     this_thread::sleep_for(std::chrono::microseconds(micro_seconds));
 }
 
-int gettimeofday(struct timeval *tp, void *tzp) {
-    auto now_stamp = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-    tp->tv_sec = (decltype(tp->tv_sec))(now_stamp / 1000000LL);
-    tp->tv_usec = now_stamp % 1000000LL;
-    return 0;
-}
 
 const char *strcasestr(const char *big, const char *little){
     string big_str = big;

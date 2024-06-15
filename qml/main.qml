@@ -94,6 +94,12 @@ ApplicationWindow {
                             '124','128','132','136','140','144','149','153','157','161','169','173','177'
                         ]
                         currentIndex: 39
+                        Component.onCompleted: {
+                            let ch = NativeApi.GetConfig()["config.channel"];
+                            if(ch&&ch!==''){
+                                currentIndex = model.indexOf(ch);
+                            }
+                        }
                     }
                 }
                 Column {
@@ -119,6 +125,12 @@ ApplicationWindow {
                         width: parent.width
                         model: ['H264','H265']
                         currentIndex: 0
+                        Component.onCompleted: {
+                            let codec = NativeApi.GetConfig()["config.codec"];
+                            if (codec&&codec !== '') {
+                                currentIndex = model.indexOf(codec);
+                            }
+                        }
                     }
                 }
             }
@@ -154,6 +166,12 @@ ApplicationWindow {
                         'MAX'
                     ]
                     currentIndex: 0
+                    Component.onCompleted: {
+                        let chw = NativeApi.GetConfig()["config.channelWidth"];
+                        if (chw&&chw !== '') {
+                            currentIndex = Number(chw);
+                        }
+                    }
                 }
             }
             Rectangle {
@@ -187,6 +205,12 @@ ApplicationWindow {
                     id:keySelector
                     text: "gs.key"
                     onClicked: fileDialog.open()
+                    Component.onCompleted: {
+                        let key = NativeApi.GetConfig()["config.key"];
+                        if (key && key !== '') {
+                            text = key;
+                        }
+                    }
                 }
             }
             Rectangle {

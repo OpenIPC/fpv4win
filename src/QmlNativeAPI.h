@@ -7,10 +7,21 @@
 #include "wifi/WFBReceiver.h"
 #include <QDir>
 #include <QFileInfo>
+#include <QJsonObject>
 #include <QObject>
 #include <QUdpSocket>
 #include <fstream>
 #include <future>
+#include <util/mini.h>
+
+using namespace toolkit;
+
+#define CONFIG "config."
+#define CONFIG_FILE "config.ini"
+#define CONFIG_CHANNEL CONFIG"channel"
+#define CONFIG_CHANNEL_WIDTH CONFIG"channelWidth"
+#define CONFIG_CHANNEL_KEY CONFIG"key"
+#define CONFIG_CHANNEL_CODEC CONFIG"codec"
 
 /**
  * C++封装留给qml使用的api
@@ -25,7 +36,18 @@ public:
     static QmlNativeAPI api;
     return api;
   }
-  explicit QmlNativeAPI(QObject *parent = nullptr) : QObject(parent){};
+  explicit QmlNativeAPI(QObject *parent = nullptr) : QObject(parent){
+    // load config
+    mINI::Instance().parseFile(CONFIG_FILE);
+  };
+  // Get config
+  Q_INVOKABLE QJsonObject GetConfig(){
+      QJsonObject config;
+      for (const auto &item : mINI::Instance()){
+        config[QString(item.first.c_str())] = QString(item.second.c_str());
+      }
+      return config;
+  }
   // get all dongle
   Q_INVOKABLE static QList<QString> GetDongleList() {
     QList<QString> l;
@@ -37,6 +59,13 @@ public:
   Q_INVOKABLE static bool Start(const QString &vidPid, int channel,
                                 int channelWidth,const QString &keyPath,
                                 const QString &codec) {
+    // save config
+    mINI::Instance()[CONFIG_CHANNEL] = channel;
+    mINI::Instance()[CONFIG_CHANNEL_WIDTH] = channelWidth;
+    mINI::Instance()[CONFIG_CHANNEL_KEY] = keyPath.toStdString();
+    mINI::Instance()[CONFIG_CHANNEL_CODEC] = codec.toStdString();
+    mINI::Instance().dumpFile(CONFIG_FILE);
+    // alloc port
     QmlNativeAPI::Instance().playerPort = QmlNativeAPI::Instance().GetFreePort();
     QmlNativeAPI::Instance().playerCodec = codec;
     return WFBReceiver::Instance().Start(vidPid.toStdString(), channel, channelWidth,keyPath.toStdString());
