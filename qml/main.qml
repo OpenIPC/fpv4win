@@ -22,6 +22,33 @@ ApplicationWindow {
                 play(sdpFile)
             });
         }
+        Rectangle {
+            width: parent.width
+            height:30
+            anchors.bottom : parent.bottom
+            color: '#33cccccc'
+            Row{
+                anchors.fill:parent
+                padding:5
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "0bps"
+                    font.pixelSize: 12
+                    color: "#ffffff"
+                    Component.onCompleted: {
+                        player.onBitrate.connect((btr)=>{
+                            if(btr>1000*1000){
+                                text = Number(btr/1000/1000).toFixed(2) + 'Mbps';
+                            }else if(btr>1000){
+                                text = Number(btr/1000).toFixed(2) + 'Kbps';
+                            }else{
+                                text = btr+ 'bps';
+                            }
+                        });
+                    }
+                }
+            }
+        }
     }
     Rectangle {
         x: parent.width - 200
