@@ -87,6 +87,46 @@ ApplicationWindow {
                         }
                     }
                 }
+                Rectangle {
+                    height: 20
+                    width: 50
+                    radius: 5
+                    color: "#55222222"
+                    border.color: "#88ffffff"
+                    border.width: 1
+                    Text {
+                        visible:!recordTimer.started
+                        horizontalAlignment: Text.Center
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: "MP4"
+                        font.pixelSize: 12
+                        color: "#ffffff"
+                    }
+                    RecordTimer{
+                        id:recordTimer
+                        width:parent.width
+                        height: parent.height
+                        property bool started:false
+                    }
+                    MouseArea {
+                        cursorShape: Qt.PointingHandCursor
+                        anchors.fill: parent
+                        onClicked:{
+                            if(!recordTimer.started){
+                                recordTimer.started = player.startRecord();
+                                if(recordTimer.started){
+                                    recordTimer.start();
+                                }
+                            }else{
+                                recordTimer.started = false;
+                                player.stopRecord();
+                                recordTimer.stop();
+                            }
+                        }
+                    }
+                }
+
             }
         }
     }

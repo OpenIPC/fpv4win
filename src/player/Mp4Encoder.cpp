@@ -8,7 +8,7 @@ Mp4Encoder::Mp4Encoder(const string& saveFilePath) {
     //分配
     _formatCtx = shared_ptr<AVFormatContext>(avformat_alloc_context(),&avformat_free_context);
     //设置格式
-    _formatCtx->oformat = av_guess_format("mp4", nullptr, nullptr);
+    _formatCtx->oformat = av_guess_format("mov", nullptr, nullptr);
     //文件保存路径
     _saveFilePath = saveFilePath;
 }

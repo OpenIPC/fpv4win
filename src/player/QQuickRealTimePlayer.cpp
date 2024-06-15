@@ -255,14 +255,17 @@ QString QQuickRealTimePlayer::captureJpeg() {
 }
 
 bool QQuickRealTimePlayer::startRecord() {
-  if (playStop) {
+  if (playStop&&!_lastFrame) {
     return false;
+  }
+  QString dirPath = QFileInfo("mp4/l").absolutePath();
+  QDir dir(dirPath);
+  if (!dir.exists()) {
+    dir.mkpath(dirPath);
   }
   // 保存路径
   stringstream ss;
-  ss << QStandardPaths::writableLocation(QStandardPaths::DesktopLocation)
-            .toStdString()
-     << "/";
+  ss<< "mp4/";
   ss << std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now().time_since_epoch())
             .count()
