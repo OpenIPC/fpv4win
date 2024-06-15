@@ -118,8 +118,8 @@ public:
     return (ssize_t)rtp_size - invalid_size - 12;
   }
 
-  string dumpString(size_t rtp_size) const {
-    stringstream printer;
+  std::string dumpString(size_t rtp_size) const {
+    std::stringstream printer;
     printer << "version:" << (int) version << "\r\n";
     printer << "padding:" << getPaddingSize(rtp_size) << "\r\n";
     printer << "ext:" << getExtSize() << "\r\n";

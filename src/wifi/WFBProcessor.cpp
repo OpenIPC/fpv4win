@@ -4,10 +4,11 @@
 
 #include "WFBProcessor.h"
 
+#include <cassert>
 #include <format>
 #include <stdexcept>
 #include <string>
-
+#include <cinttypes>
 
 using namespace std;
 

@@ -4,7 +4,7 @@
 
 #ifndef CTRLCENTER_QMLNATIVEAPI_H
 #define CTRLCENTER_QMLNATIVEAPI_H
-#include "WFBReceiver.h"
+#include "wifi/WFBReceiver.h"
 #include <QDir>
 #include <QFileInfo>
 #include <QObject>

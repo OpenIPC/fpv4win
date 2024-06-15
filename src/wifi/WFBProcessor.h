@@ -7,7 +7,7 @@
 
 
 #include "WFBDefine.h"
-
+#include <functional>
 
 class BaseAggregator
 {

@@ -4,7 +4,7 @@
 #include <vector>
 #include <QDateTime>
 
-#define min(a, b) (a > b ? b : a)
+
 
 #define MAX_AUDIO_PACKET (2 * 1024 * 1024)
 

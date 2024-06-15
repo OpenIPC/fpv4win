@@ -2,7 +2,7 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
-#include <src/QQuickRealTimePlayer.h>
+#include <player/QQuickRealTimePlayer.h>
 
 
 #pragma comment(lib, "ws2_32.lib")

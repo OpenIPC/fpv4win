@@ -34,7 +34,7 @@ file(GLOB_RECURSE SRC_LIST
 )
 list(FILTER SRC_LIST EXCLUDE REGEX ".*/3rd.*/src/main.cpp")
 
-include_directories(3rd/rtl8812au-monitor-pcap/src 3rd/rtl8812au-monitor-pcap/hal)
+include_directories(src 3rd/rtl8812au-monitor-pcap/src 3rd/rtl8812au-monitor-pcap/hal)
 add_executable(${PROJECT_NAME} ${SRC_LIST} qml.qrc)
 
 target_link_libraries(${PROJECT_NAME}
