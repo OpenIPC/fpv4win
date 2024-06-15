@@ -20,7 +20,6 @@ ApplicationWindow {
         width: parent.width - 200
         height:parent.height
         Component.onCompleted: {
-            player.play('rtmp://10.8.109.230:1935/rtp/44050000001310000001?userId=253774045377')
             NativeApi.onRtpStream.connect((sdpFile)=>{
                 play(sdpFile)
             });
