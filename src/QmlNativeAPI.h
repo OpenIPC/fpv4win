@@ -38,7 +38,9 @@ public:
   }
   explicit QmlNativeAPI(QObject *parent = nullptr) : QObject(parent){
     // load config
-    mINI::Instance().parseFile(CONFIG_FILE);
+    try{
+      mINI::Instance().parseFile(CONFIG_FILE);
+    } catch (...) {}
   };
   // Get config
   Q_INVOKABLE QJsonObject GetConfig(){
