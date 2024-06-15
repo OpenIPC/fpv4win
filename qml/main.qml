@@ -37,7 +37,7 @@ ApplicationWindow {
             border.color: "#55222222"
             border.width: 1
             Row{
-                anchors.fill:parent
+                height:parent.height
                 padding:5
                 spacing:5
                 Text {
@@ -59,6 +59,14 @@ ApplicationWindow {
                         });
                     }
                 }
+
+
+            }
+            Row{
+                anchors.right:parent.right
+                height:parent.height
+                padding:5
+                spacing:5
                 Rectangle {
                     height:20
                     width:30
@@ -133,7 +141,6 @@ ApplicationWindow {
                         }
                     }
                 }
-
             }
         }
     }
