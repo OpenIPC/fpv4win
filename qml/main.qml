@@ -117,10 +117,17 @@ ApplicationWindow {
                                 recordTimer.started = player.startRecord();
                                 if(recordTimer.started){
                                     recordTimer.start();
+                                }else{
+                                    tips.showPop('Record failed! ',3000);
                                 }
                             }else{
                                 recordTimer.started = false;
-                                player.stopRecord();
+                                let f = player.stopRecord();
+                                if(f!==''){
+                                    tips.showPop('Saved '+f,3000);
+                                }else{
+                                    tips.showPop('Record failed! ',3000);
+                                }
                                 recordTimer.stop();
                             }
                         }

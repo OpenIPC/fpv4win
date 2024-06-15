@@ -296,9 +296,13 @@ bool QQuickRealTimePlayer::startRecord() {
   return true;
 }
 
-void QQuickRealTimePlayer::stopRecord() {
+QString QQuickRealTimePlayer::stopRecord() {
+  if(!_mp4Encoder){
+    return {};
+  }
   _mp4Encoder->stop();
   decoder->_gotPktCallback = nullptr;
+  return {_mp4Encoder->_saveFilePath.c_str()};
 }
 
 int QQuickRealTimePlayer::getVideoWidth() {

@@ -24,11 +24,11 @@ public:
     //音视频index
     int videoIndex = -1;
     int audioIndex = -1;
+    //文件保存路径
+    string _saveFilePath;
 private:
     //是否已经初始化
     bool _isOpen = false;
-    //文件保存路径
-    string _saveFilePath;
     //编码上下文
     shared_ptr<AVFormatContext> _formatCtx;
     //原始视频流时间基

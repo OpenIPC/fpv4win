@@ -53,7 +53,7 @@ public:
     Q_INVOKABLE QString captureJpeg();
     //录像
     Q_INVOKABLE bool startRecord();
-    Q_INVOKABLE void stopRecord();
+    Q_INVOKABLE QString stopRecord();
     //录制GIF
     Q_INVOKABLE bool startGifRecord();
     Q_INVOKABLE void stopGifRecord();
