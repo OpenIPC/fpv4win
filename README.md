@@ -31,8 +31,8 @@ It is recommended to use with [OpenIPC](https://github.com/OpenIPC) FPV
 ### Todo
 - OSD
 - Hardware acceleration decoding
-- Record MP4 file
-- Capture frame to JPG
+- ~~Record MP4 file~~
+- ~~Capture frame to JPG~~
 - Stream to RTMP/RTSP/SRT/WHIP server
 - Receive multiple video streams using a single adapter
 - ONVIF/GB28181/SIP client
