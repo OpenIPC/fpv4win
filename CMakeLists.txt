@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(fpv-wfb)
+project(fpv4win)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_AUTOMOC ON)

@@ -58,8 +58,8 @@ jobs:
         .\vcpkg integrate install
         .\vcpkg install libusb libpcap libsodium ffmpeg qt5 sdl2 vcpkg-tool-ninja
         cd ..
-        cmake "-DCMAKE_TOOLCHAIN_FILE=D:/a/fpv-wfb/fpv-wfb/vcpkg/scripts/buildsystems/vcpkg.cmake" -S ./ -B "build"
-        cmake --build build --config Release --target fpv-wfb
+        cmake "-DCMAKE_TOOLCHAIN_FILE=D:/a/fpv4win/fpv4win/vcpkg/scripts/buildsystems/vcpkg.cmake" -S ./ -B "build"
+        cmake --build build --config Release --target fpv4win
         cp gs.key build/Release/
         Invoke-WebRequest -Uri https://github.com/pbatard/libwdi/releases/download/v1.5.0/zadig-2.8.exe -OutFile build/Release/zadig-2.8.exe
         Invoke-WebRequest -Uri https://aka.ms/vs/17/release/vc_redist.x64.exe -OutFile build/Release/vcredist_x64.exe
@@ -67,5 +67,5 @@ jobs:
     - name: Deploy
       uses: actions/upload-artifact@v4
       with:
-        name: fpv-wfb
+        name: fpv4win
         path: build/Release/

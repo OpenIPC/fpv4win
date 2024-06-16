@@ -1,6 +1,6 @@
 # WiFi Broadcast FPV client for Windows platform.
 
-fpv-wfb is an app for Windows that packages multiple components together to decode an H264/H265 video feed broadcasted by wfb-ng over the air.
+fpv4win is an app for Windows that packages multiple components together to decode an H264/H265 video feed broadcasted by wfb-ng over the air.
 
 
 - [devourer](https://github.com/openipc/devourer): A userspace rtl8812au driver initially created by [buldo](https://github.com/buldo) and converted to C by [josephnef](https://github.com/josephnef) .
@@ -39,4 +39,4 @@ It is recommended to use with [OpenIPC](https://github.com/OpenIPC) FPV
 
 ### How to build
 - Take a look at
-[GithubAction](https://github.com/TalusL/fpv-wfb/blob/main/.github/workflows/msbuild.yml)
+[GithubAction](https://github.com/openipc/fpv4win/blob/main/.github/workflows/msbuild.yml)
