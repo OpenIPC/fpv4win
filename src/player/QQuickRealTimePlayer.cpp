@@ -1,6 +1,7 @@
 ﻿
 #include "QQuickRealTimePlayer.h"
 #include "JpegEncoder.h"
+#include <QDir>
 #include <QOpenGLFramebufferObject>
 #include <QQuickWindow>
 #include <QStandardPaths>
@@ -191,7 +192,7 @@ void QQuickRealTimePlayer::play(const QString &playUrl) {
 
 void QQuickRealTimePlayer::stop() {
   playStop = true;
-  if(decoder->pFormatCtx) {
+  if(decoder&&decoder->pFormatCtx) {
     decoder->pFormatCtx->interrupt_callback.callback = [](void*) {
       return 1;
     };
@@ -233,31 +234,38 @@ void QQuickRealTimePlayer::setMuted(bool muted) {
 
 QQuickRealTimePlayer::~QQuickRealTimePlayer() { stop(); }
 
-bool QQuickRealTimePlayer::captureJpeg() {
+QString QQuickRealTimePlayer::captureJpeg() {
   if (!_lastFrame) {
-    return false;
+    return "";
+  }
+  QString dirPath = QFileInfo("jpg/l").absolutePath();
+  QDir dir(dirPath);
+  if (!dir.exists()) {
+    dir.mkpath(dirPath);
   }
   stringstream ss;
-  ss << QStandardPaths::writableLocation(QStandardPaths::DesktopLocation)
-            .toStdString()
-     << "/";
+  ss << "jpg/";
   ss << std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now().time_since_epoch())
             .count()
      << ".jpg";
+  auto ok = JpegEncoder::encodeJpeg(ss.str(), _lastFrame);
   // 截图
-  return JpegEncoder::encodeJpeg(ss.str(), _lastFrame);
+  return ok?QString(ss.str().c_str()):"";
 }
 
 bool QQuickRealTimePlayer::startRecord() {
-  if (playStop) {
+  if (playStop&&!_lastFrame) {
     return false;
+  }
+  QString dirPath = QFileInfo("mp4/l").absolutePath();
+  QDir dir(dirPath);
+  if (!dir.exists()) {
+    dir.mkpath(dirPath);
   }
   // 保存路径
   stringstream ss;
-  ss << QStandardPaths::writableLocation(QStandardPaths::DesktopLocation)
-            .toStdString()
-     << "/";
+  ss<< "mp4/";
   ss << std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now().time_since_epoch())
             .count()
@@ -288,9 +296,13 @@ bool QQuickRealTimePlayer::startRecord() {
   return true;
 }
 
-void QQuickRealTimePlayer::stopRecord() {
+QString QQuickRealTimePlayer::stopRecord() {
+  if(!_mp4Encoder){
+    return {};
+  }
   _mp4Encoder->stop();
   decoder->_gotPktCallback = nullptr;
+  return {_mp4Encoder->_saveFilePath.c_str()};
 }
 
 int QQuickRealTimePlayer::getVideoWidth() {

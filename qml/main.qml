@@ -11,6 +11,8 @@ ApplicationWindow {
     id:window
     title: qsTr("")
 
+
+
     QQuickRealTimePlayer {
         x: 0
         y: 0
@@ -21,6 +23,125 @@ ApplicationWindow {
             NativeApi.onRtpStream.connect((sdpFile)=>{
                 play(sdpFile)
             });
+        }
+        TipsBox{
+            id:tips
+            z:999
+            tips:''
+        }
+        Rectangle {
+            width: parent.width
+            height:30
+            anchors.bottom : parent.bottom
+            color: Qt.rgba(0,0,0,0.3)
+            border.color: "#55222222"
+            border.width: 1
+            Row{
+                height:parent.height
+                padding:5
+                spacing:5
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "0bps"
+                    font.pixelSize: 12
+                    width:60
+                    horizontalAlignment: Text.Center
+                    color: "#ffffff"
+                    Component.onCompleted: {
+                        player.onBitrate.connect((btr)=>{
+                            if(btr>1000*1000){
+                                text = Number(btr/1000/1000).toFixed(2) + 'Mbps';
+                            }else if(btr>1000){
+                                text = Number(btr/1000).toFixed(2) + 'Kbps';
+                            }else{
+                                text = btr+ 'bps';
+                            }
+                        });
+                    }
+                }
+
+
+            }
+            Row{
+                anchors.right:parent.right
+                height:parent.height
+                padding:5
+                spacing:5
+                Rectangle {
+                    height:20
+                    width:30
+                    radius:5
+                    color: "#55222222"
+                    border.color: "#88ffffff"
+                    border.width: 1
+                    Text {
+                        horizontalAlignment: Text.Center
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: "JPG"
+                        font.pixelSize: 12
+                        color: "#ffffff"
+                    }
+                    MouseArea {
+                        cursorShape: Qt.PointingHandCursor
+                        anchors.fill: parent
+                        onClicked:{
+                            let f = player.captureJpeg();
+                            if(f!==''){
+                                tips.showPop('Saved '+f,3000);
+                            }else{
+                                tips.showPop('Capture failed! '+f,3000);
+                            }
+                        }
+                    }
+                }
+                Rectangle {
+                    height: 20
+                    width: 50
+                    radius: 5
+                    color: "#55222222"
+                    border.color: "#88ffffff"
+                    border.width: 1
+                    Text {
+                        visible:!recordTimer.started
+                        horizontalAlignment: Text.Center
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: "MP4"
+                        font.pixelSize: 12
+                        color: "#ffffff"
+                    }
+                    RecordTimer{
+                        id:recordTimer
+                        width:parent.width
+                        height: parent.height
+                        property bool started:false
+                    }
+                    MouseArea {
+                        cursorShape: Qt.PointingHandCursor
+                        anchors.fill: parent
+                        onClicked:{
+                            if(!recordTimer.started){
+                                recordTimer.started = player.startRecord();
+                                if(recordTimer.started){
+                                    recordTimer.start();
+                                }else{
+                                    tips.showPop('Record failed! ',3000);
+                                }
+                            }else{
+                                recordTimer.started = false;
+                                let f = player.stopRecord();
+                                if(f!==''){
+                                    tips.showPop('Saved '+f,3000);
+                                }else{
+                                    tips.showPop('Record failed! ',3000);
+                                }
+                                recordTimer.stop();
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
     Rectangle {
@@ -94,6 +215,12 @@ ApplicationWindow {
                             '124','128','132','136','140','144','149','153','157','161','169','173','177'
                         ]
                         currentIndex: 39
+                        Component.onCompleted: {
+                            let ch = NativeApi.GetConfig()["config.channel"];
+                            if(ch&&ch!==''){
+                                currentIndex = model.indexOf(ch);
+                            }
+                        }
                     }
                 }
                 Column {
@@ -119,6 +246,12 @@ ApplicationWindow {
                         width: parent.width
                         model: ['H264','H265']
                         currentIndex: 0
+                        Component.onCompleted: {
+                            let codec = NativeApi.GetConfig()["config.codec"];
+                            if (codec&&codec !== '') {
+                                currentIndex = model.indexOf(codec);
+                            }
+                        }
                     }
                 }
             }
@@ -154,6 +287,12 @@ ApplicationWindow {
                         'MAX'
                     ]
                     currentIndex: 0
+                    Component.onCompleted: {
+                        let chw = NativeApi.GetConfig()["config.channelWidth"];
+                        if (chw&&chw !== '') {
+                            currentIndex = Number(chw);
+                        }
+                    }
                 }
             }
             Rectangle {
@@ -187,6 +326,12 @@ ApplicationWindow {
                     id:keySelector
                     text: "gs.key"
                     onClicked: fileDialog.open()
+                    Component.onCompleted: {
+                        let key = NativeApi.GetConfig()["config.key"];
+                        if (key && key !== '') {
+                            text = key;
+                        }
+                    }
                 }
             }
             Rectangle {

@@ -1,41 +1,42 @@
 # WiFi Broadcast FPV client for Windows platform.
 
+fpv-wfb is an app for Windows that packages multiple components together to decode an H264/H265 video feed broadcasted by wfb-ng over the air.
 
-fpv-wfb is an app for windows packaging multiple pieces together to decode an H264/H265 video feed broadcast by wfb-ng over the air.
 
-- [devourer](https://github.com/openipc/devourer): userspace rtl8812au driver initially created by [buldo](https://github.com/buldo) and converted to C by [josephnef](https://github.com/josephnef) .
-- [wfb-ng](https://github.com/svpcom/wfb-ng): library allowing the broadcast of the video feed over the air.
- 
-Supported rtl8812au wifi adapter only 
+- [devourer](https://github.com/openipc/devourer): A userspace rtl8812au driver initially created by [buldo](https://github.com/buldo) and converted to C by [josephnef](https://github.com/josephnef) .
+- [wfb-ng](https://github.com/svpcom/wfb-ng): A library that allows broadcasting the video feed over the air.
+
+Supported rtl8812au WiFi adapter only.
 
 It is recommended to use with [OpenIPC](https://github.com/OpenIPC) FPV
 
 ![img.png](img/img.png)
 
 ### Usage
-- download [Zadig](https://github.com/pbatard/libwdi/releases/download/v1.5.0/zadig-2.8.exe)
-- Repair libusb driver( maybe need enable ```[options]->[list all devices]``` to show your adapter)
+- 1. Download [Zadig](https://github.com/pbatard/libwdi/releases/download/v1.5.0/zadig-2.8.exe)
+- 2. Repair the libusb driver (you may need to enable [Options] -> [List All Devices] to show your adapter).
 
-![img.png](img/img1.png)
+    ![img.png](img/img1.png)
 
-- select you 8812au adapter
-- select your wfb key
-- select your drone channel
-- enjoy
+- 3. Install [vcredist_x64.exe](https://aka.ms/vs/17/release/vc_redist.x64.exe)
+- 4. Select your 8812au adapter.
+- 5. Select your WFB key.
+- 6. Select your drone channel.
+- 7. Enjoy!
 
 ### Delay test
 
-![img.png](img/delay.jpg)
+![img.png](img/delay.png)
 
 ### Todo
 - OSD
 - Hardware acceleration decoding
 - Record MP4 file
 - Capture frame to JPG
-- Streaming to RTMP/RTSP/SRT/WHIP server
+- Stream to RTMP/RTSP/SRT/WHIP server
 - Receive multiple video streams using a single adapter
-- Onvif/GB28181/SIP client
+- ONVIF/GB28181/SIP client
 
 ### How to build
-- take a look for 
+- Take a look at
 [GithubAction](https://github.com/TalusL/fpv-wfb/blob/main/.github/workflows/msbuild.yml)

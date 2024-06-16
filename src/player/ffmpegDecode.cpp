@@ -4,7 +4,7 @@
 #include <vector>
 #include <QDateTime>
 
-#define min(a, b) (a > b ? b : a)
+
 
 #define MAX_AUDIO_PACKET (2 * 1024 * 1024)
 
@@ -17,7 +17,7 @@ bool FFmpegDecoder::OpenInput(string &inputFile) {
   av_dict_set(&param, "tune", "zerolatency", 0);
   av_dict_set(&param, "buffer_size", "425984", 0);
   av_dict_set(&param, "rtsp_transport", "tcp", 0);
-  av_dict_set(&param, "protocol_whitelist", "file,udp,rtp", 0);
+  av_dict_set(&param, "protocol_whitelist", "file,udp,tcp,rtp,rtmp,rtsp,http", 0);
 
   // 打开输入
   if (avformat_open_input(&pFormatCtx, inputFile.c_str(), nullptr, &param) !=
