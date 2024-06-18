@@ -23,7 +23,7 @@ Aggregator::Aggregator(const string &keypair, uint64_t epoch, uint32_t channel_i
     memset(session_key, '\0', sizeof(session_key));
 
     FILE *fp;
-    if((fp = fopen(keypair.c_str(), "r")) == NULL)
+    if((fp = fopen(keypair.c_str(), "rb")) == NULL)
     {
         throw runtime_error(format("Unable to open {}: {}", keypair.c_str(), strerror(errno)));
     }
