@@ -88,7 +88,7 @@ shared_ptr<AVFrame> QQuickRealTimePlayer::getFrame(bool &got) {
       return {};
     }
     // 从帧缓冲区取出帧
-    frame = videoFrameQueue.back();
+    frame = videoFrameQueue.front();
     got = true;
     // 缓冲区出队被渲染的帧
     videoFrameQueue.pop();
