@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include "libavutil/frame.h"
 #include <QOpenGLBuffer>
 #include <QOpenGLFunctions>
 #include <QOpenGLShader>
@@ -7,10 +8,8 @@
 #include <QOpenGLTexture>
 #include <QQuickFramebufferObject>
 #include <memory>
-#include "libavutil/frame.h"
 
-class YUVData
-{
+class YUVData {
 public:
     QByteArray Y;
     QByteArray U;
@@ -22,8 +21,7 @@ public:
 };
 
 class TItemRender;
-class RealTimeRenderer : public QOpenGLFunctions
-{
+class RealTimeRenderer : public QOpenGLFunctions {
 public:
     RealTimeRenderer();
     ~RealTimeRenderer();
@@ -31,10 +29,11 @@ public:
     void paint();
     void resize(int width, int height);
     void updateTextureInfo(int width, int height, int format);
-    void updateTextureData(const std::shared_ptr<AVFrame>& data);
+    void updateTextureData(const std::shared_ptr<AVFrame> &data);
     void clear();
 
-friend class TItemRender;
+    friend class TItemRender;
+
 protected:
     void initTexture();
     void initShader();
@@ -42,14 +41,14 @@ protected:
 
 private:
     QOpenGLShaderProgram mProgram;
-    QOpenGLTexture* mTexY = nullptr;
-    QOpenGLTexture* mTexU = nullptr;
-    QOpenGLTexture* mTexV = nullptr;
+    QOpenGLTexture *mTexY = nullptr;
+    QOpenGLTexture *mTexU = nullptr;
+    QOpenGLTexture *mTexV = nullptr;
     QVector<QVector3D> mVertices;
     QVector<QVector2D> mTexcoords;
-    int mModelMatHandle{}, mViewMatHandle{}, mProjectMatHandle{};
-    int mVerticesHandle{};
-    int mTexCoordHandle{};
+    int mModelMatHandle {}, mViewMatHandle {}, mProjectMatHandle {};
+    int mVerticesHandle {};
+    int mTexCoordHandle {};
 
     QMatrix4x4 mModelMatrix;
     QMatrix4x4 mViewMatrix;

@@ -8,13 +8,13 @@
  * may be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <algorithm>
 #include <cassert>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <string>
-#include <algorithm>
 #include <random>
+#include <string>
 
 #include "util.h"
 
@@ -55,7 +55,7 @@ int uv_exepath(char *buffer, int *size) {
         return -EIO;
 
     *size -= 1;
-    if ((size_t) *size > abspath_size)
+    if ((size_t)*size > abspath_size)
         *size = abspath_size;
 
     memcpy(buffer, abspath, *size);
@@ -64,8 +64,7 @@ int uv_exepath(char *buffer, int *size) {
     return 0;
 }
 
-#endif //defined(__MACH__) || defined(__APPLE__)
-
+#endif // defined(__MACH__) || defined(__APPLE__)
 
 #define PATH_MAX 4096
 
@@ -78,7 +77,7 @@ static constexpr char CCH[] = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLM
 string makeRandStr(int sz, bool printable) {
     string ret;
     ret.resize(sz);
-    std::mt19937 rng(std::random_device{}());
+    std::mt19937 rng(std::random_device {}());
     for (int i = 0; i < sz; ++i) {
         if (printable) {
             uint32_t x = rng() % (sizeof(CCH) - 1);
@@ -97,7 +96,7 @@ bool is_safe(uint8_t b) {
 string hexdump(const void *buf, size_t len) {
     string ret("\r\n");
     char tmp[8];
-    const uint8_t *data = (const uint8_t *) buf;
+    const uint8_t *data = (const uint8_t *)buf;
     for (size_t i = 0; i < len; i += 16) {
         for (int j = 0; j < 16; ++j) {
             if (i + j < len) {
@@ -123,7 +122,7 @@ string hexdump(const void *buf, size_t len) {
 string hexmem(const void *buf, size_t len) {
     string ret;
     char tmp[8];
-    const uint8_t *data = (const uint8_t *) buf;
+    const uint8_t *data = (const uint8_t *)buf;
     for (size_t i = 0; i < len; ++i) {
         int sz = sprintf(tmp, "%.2x ", data[i]);
         ret.append(tmp, sz);
@@ -132,10 +131,10 @@ string hexmem(const void *buf, size_t len) {
 }
 
 string exePath(bool isExe /*= true*/) {
-    char buffer[PATH_MAX * 2 + 1] = {0};
+    char buffer[PATH_MAX * 2 + 1] = { 0 };
     int n = -1;
 #if defined(_WIN32)
-    n = GetModuleFileNameA(isExe?nullptr:(HINSTANCE)&__ImageBase, buffer, sizeof(buffer));
+    n = GetModuleFileNameA(isExe ? nullptr : (HINSTANCE)&__ImageBase, buffer, sizeof(buffer));
 #elif defined(__MACH__) || defined(__APPLE__)
     n = sizeof(buffer);
     if (uv_exepath(buffer, &n) != 0) {
@@ -153,13 +152,13 @@ string exePath(bool isExe /*= true*/) {
     }
 
 #if defined(_WIN32)
-    //windows下把路径统一转换层unix风格，因为后续都是按照unix风格处理的
+    // windows下把路径统一转换层unix风格，因为后续都是按照unix风格处理的
     for (auto &ch : filePath) {
         if (ch == '\\') {
             ch = '/';
         }
     }
-#endif //defined(_WIN32)
+#endif // defined(_WIN32)
 
     return filePath;
 }
@@ -215,17 +214,19 @@ vector<string> split(const string &s, const char *delim) {
     return ret;
 }
 
-#define TRIM(s, chars) \
-do{ \
-    string map(0xFF, '\0'); \
-    for (auto &ch : chars) { \
-        map[(unsigned char &)ch] = '\1'; \
-    } \
-    while( s.size() && map.at((unsigned char &)s.back())) s.pop_back(); \
-    while( s.size() && map.at((unsigned char &)s.front())) s.erase(0,1); \
-}while(0);
+#define TRIM(s, chars)                                                                                                 \
+    do {                                                                                                               \
+        string map(0xFF, '\0');                                                                                        \
+        for (auto &ch : chars) {                                                                                       \
+            map[(unsigned char &)ch] = '\1';                                                                           \
+        }                                                                                                              \
+        while (s.size() && map.at((unsigned char &)s.back()))                                                          \
+            s.pop_back();                                                                                              \
+        while (s.size() && map.at((unsigned char &)s.front()))                                                         \
+            s.erase(0, 1);                                                                                             \
+    } while (0);
 
-//去除前后的空格、回车符、制表符
+// 去除前后的空格、回车符、制表符
 std::string &trim(std::string &s, const string &chars) {
     TRIM(s, chars);
     return s;
@@ -257,7 +258,6 @@ bool end_with(const string &str, const string &substr) {
     return pos != string::npos && pos == str.size() - substr.size();
 }
 
-
 #if defined(_WIN32)
 void sleep(int second) {
     Sleep(1000 * second);
@@ -266,14 +266,13 @@ void usleep(int micro_seconds) {
     this_thread::sleep_for(std::chrono::microseconds(micro_seconds));
 }
 
-
-const char *strcasestr(const char *big, const char *little){
+const char *strcasestr(const char *big, const char *little) {
     string big_str = big;
     string little_str = little;
     strToLower(big_str);
     strToLower(little_str);
     auto pos = strstr(big_str.data(), little_str.data());
-    if (!pos){
+    if (!pos) {
         return nullptr;
     }
     return big + (pos - big_str.data());
@@ -286,7 +285,7 @@ int vasprintf(char **strp, const char *fmt, va_list ap) {
         return -1;
     }
     size_t size = (size_t)len + 1;
-    char *str = (char*)malloc(size);
+    char *str = (char *)malloc(size);
     if (!str) {
         return -1;
     }
@@ -300,7 +299,7 @@ int vasprintf(char **strp, const char *fmt, va_list ap) {
     return r;
 }
 
- int asprintf(char **strp, const char *fmt, ...) {
+int asprintf(char **strp, const char *fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
     int r = vasprintf(strp, fmt, ap);
@@ -308,8 +307,7 @@ int vasprintf(char **strp, const char *fmt, va_list ap) {
     return r;
 }
 
-#endif //WIN32
-
+#endif // WIN32
 
 static inline uint64_t getCurrentMicrosecondOrigin() {
 #if !defined(_WIN32)
@@ -317,11 +315,10 @@ static inline uint64_t getCurrentMicrosecondOrigin() {
     gettimeofday(&tv, nullptr);
     return tv.tv_sec * 1000000LL + tv.tv_usec;
 #else
-    return  std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch())
+        .count();
 #endif
 }
-
-
 
 string getTimeStr(const char *fmt, time_t time) {
     if (!time) {
@@ -354,5 +351,4 @@ static string limitString(const char *name, size_t max_size) {
     return str;
 }
 
-}  // namespace toolkit
-
+} // namespace toolkit

@@ -2,9 +2,8 @@
 #include "libavutil/pixfmt.h"
 #include <QOpenGLPixelTransferOptions>
 
-
-#define VSHCODE \
-R"(
+#define VSHCODE                                                                                                        \
+    R"(
 attribute highp vec3 qt_Vertex;
 attribute highp vec2 texCoord;
 
@@ -21,8 +20,8 @@ void main(void)
 
 )"
 
-#define FSHCPDE \
-R"(
+#define FSHCPDE                                                                                                        \
+    R"(
 varying vec2 v_texCoord;
 uniform sampler2D tex_y;
 uniform sampler2D tex_u;
@@ -64,16 +63,12 @@ void main(void)
 
 )"
 
-static void safeDeleteTexture(QOpenGLTexture* texture)
-{
-    if (texture)
-    {
-        if (texture->isBound())
-        {
+static void safeDeleteTexture(QOpenGLTexture *texture) {
+    if (texture) {
+        if (texture->isBound()) {
             texture->release();
         }
-        if (texture->isCreated())
-        {
+        if (texture->isCreated()) {
             texture->destroy();
         }
         delete texture;
@@ -81,21 +76,18 @@ static void safeDeleteTexture(QOpenGLTexture* texture)
     }
 }
 
-RealTimeRenderer::RealTimeRenderer()
-{
+RealTimeRenderer::RealTimeRenderer() {
     qWarning() << __FUNCTION__;
 }
 
-RealTimeRenderer::~RealTimeRenderer()
-{
+RealTimeRenderer::~RealTimeRenderer() {
     qWarning() << __FUNCTION__;
     safeDeleteTexture(mTexY);
     safeDeleteTexture(mTexU);
     safeDeleteTexture(mTexV);
 }
 
-void RealTimeRenderer::init()
-{
+void RealTimeRenderer::init() {
     qWarning() << __FUNCTION__;
     initializeOpenGLFunctions();
     glDepthMask(GL_TRUE);
@@ -104,8 +96,7 @@ void RealTimeRenderer::init()
     initTexture();
     initGeometry();
 }
-void RealTimeRenderer::resize(int width, int height)
-{
+void RealTimeRenderer::resize(int width, int height) {
 
     m_itemWidth = width;
     m_itemHeight = height;
@@ -117,15 +108,12 @@ void RealTimeRenderer::resize(int width, int height)
     mProjectionMatrix.setToIdentity();
     mProjectionMatrix.frustum(-1.0, 1.0, bottom, top, n, f);
 }
-void RealTimeRenderer::initShader()
-{
-    if (!mProgram.addShaderFromSourceCode(QOpenGLShader::Vertex, VSHCODE))
-    {
+void RealTimeRenderer::initShader() {
+    if (!mProgram.addShaderFromSourceCode(QOpenGLShader::Vertex, VSHCODE)) {
         qWarning() << " add vertex shader file failed.";
         return;
     }
-    if (!mProgram.addShaderFromSourceCode(QOpenGLShader::Fragment, FSHCPDE))
-    {
+    if (!mProgram.addShaderFromSourceCode(QOpenGLShader::Fragment, FSHCPDE)) {
         qWarning() << " add fragment shader file failed.";
         return;
     }
@@ -134,8 +122,7 @@ void RealTimeRenderer::initShader()
     mProgram.link();
     mProgram.bind();
 }
-void RealTimeRenderer::initTexture()
-{
+void RealTimeRenderer::initTexture() {
     // yuv420p
     mTexY = new QOpenGLTexture(QOpenGLTexture::Target2D);
     mTexY->setFormat(QOpenGLTexture::LuminanceFormat);
@@ -159,8 +146,7 @@ void RealTimeRenderer::initTexture()
     mTexV->setWrapMode(QOpenGLTexture::ClampToEdge);
 }
 
-void RealTimeRenderer::initGeometry()
-{
+void RealTimeRenderer::initGeometry() {
     mVertices << QVector3D(-1, 1, 0.0f) << QVector3D(1, 1, 0.0f) << QVector3D(1, -1, 0.0f) << QVector3D(-1, -1, 0.0f);
     mTexcoords << QVector2D(0, 1) << QVector2D(1, 1) << QVector2D(1, 0) << QVector2D(0, 0);
 
@@ -168,11 +154,9 @@ void RealTimeRenderer::initGeometry()
     mViewMatrix.lookAt(QVector3D(0.0f, 0.0f, 1.001f), QVector3D(0.0f, 0.0f, -5.0f), QVector3D(0.0f, 1.0f, 0.0f));
     mModelMatrix.setToIdentity();
 }
-void RealTimeRenderer::updateTextureInfo(int width, int height, int format)
-{
+void RealTimeRenderer::updateTextureInfo(int width, int height, int format) {
     mPixFmt = format;
-    if (format == AV_PIX_FMT_YUV420P || format == AV_PIX_FMT_YUVJ420P)
-    {
+    if (format == AV_PIX_FMT_YUV420P || format == AV_PIX_FMT_YUVJ420P) {
         // yuv420p
         mTexY->setSize(width, height);
         mTexY->allocateStorage(QOpenGLTexture::Luminance, QOpenGLTexture::UInt8);
@@ -182,19 +166,17 @@ void RealTimeRenderer::updateTextureInfo(int width, int height, int format)
 
         mTexV->setSize(width / 2, height / 2);
         mTexV->allocateStorage(QOpenGLTexture::Luminance, QOpenGLTexture::UInt8);
-    }else if (format == AV_PIX_FMT_NV12){
+    } else if (format == AV_PIX_FMT_NV12) {
         mTexY->setSize(width, height);
         mTexY->allocateStorage(QOpenGLTexture::Luminance, QOpenGLTexture::UInt8);
 
-        mTexU->setSize(width/2, height/2);
+        mTexU->setSize(width / 2, height / 2);
         mTexU->allocateStorage(QOpenGLTexture::LuminanceAlpha, QOpenGLTexture::UInt8);
 
         // NV12 not use for v
         mTexV->setSize(2, 2);
         mTexV->allocateStorage(QOpenGLTexture::Luminance, QOpenGLTexture::UInt8);
-    }
-    else
-    {
+    } else {
         // 先按yuv444p处理
         mTexY->setSize(width, height);
         mTexY->allocateStorage(QOpenGLTexture::Luminance, QOpenGLTexture::UInt8);
@@ -208,62 +190,57 @@ void RealTimeRenderer::updateTextureInfo(int width, int height, int format)
     mTextureAlloced = true;
 }
 
-void RealTimeRenderer::updateTextureData(const std::shared_ptr<AVFrame>& data)
-{
+void RealTimeRenderer::updateTextureData(const std::shared_ptr<AVFrame> &data) {
     double frameWidth = m_itemWidth;
     double frameHeight = m_itemHeight;
-    if(m_itemWidth*(1.0*data->height/data->width)<m_itemHeight){
-        frameHeight = frameWidth * (1.0*data->height/data->width);
-    }else{
-        frameWidth = frameHeight * (1.0*data->width/data->height);
+    if (m_itemWidth * (1.0 * data->height / data->width) < m_itemHeight) {
+        frameHeight = frameWidth * (1.0 * data->height / data->width);
+    } else {
+        frameWidth = frameHeight * (1.0 * data->width / data->height);
     }
-    double x = (m_itemWidth - frameWidth)/2;
-    double y = (m_itemHeight - frameHeight)/2;
-    //GL顶点坐标转换
-    auto x1 = (float)(-1 + 2.0/m_itemWidth * x);
-    auto y1 = (float)(1 - 2.0/m_itemHeight * y);
-    auto x2 = (float)(2.0/m_itemWidth * frameWidth + x1);
-    auto y2 = (float)(y1 - 2.0/m_itemHeight * frameHeight);
+    double x = (m_itemWidth - frameWidth) / 2;
+    double y = (m_itemHeight - frameHeight) / 2;
+    // GL顶点坐标转换
+    auto x1 = (float)(-1 + 2.0 / m_itemWidth * x);
+    auto y1 = (float)(1 - 2.0 / m_itemHeight * y);
+    auto x2 = (float)(2.0 / m_itemWidth * frameWidth + x1);
+    auto y2 = (float)(y1 - 2.0 / m_itemHeight * frameHeight);
 
     mVertices.clear();
-    mVertices << QVector3D(x1, y1, 0.0f)
-              << QVector3D(x2, y1, 0.0f)
-              << QVector3D(x2, y2, 0.0f)
+    mVertices << QVector3D(x1, y1, 0.0f) << QVector3D(x2, y1, 0.0f) << QVector3D(x2, y2, 0.0f)
               << QVector3D(x1, y2, 0.0f);
 
     QOpenGLPixelTransferOptions options;
-    if(data->linesize[0]) {
+    if (data->linesize[0]) {
         options.setRowLength(data->linesize[0]);
         options.setImageHeight(data->height);
         mTexY->setData(QOpenGLTexture::Luminance, QOpenGLTexture::UInt8, data->data[0], &options);
     }
-    if(data->linesize[1]) {
-        if(data->format == AV_PIX_FMT_NV12){
-            options.setRowLength(data->linesize[1]/2);
-            options.setImageHeight(data->height/2);
+    if (data->linesize[1]) {
+        if (data->format == AV_PIX_FMT_NV12) {
+            options.setRowLength(data->linesize[1] / 2);
+            options.setImageHeight(data->height / 2);
             mTexU->setData(QOpenGLTexture::LuminanceAlpha, QOpenGLTexture::UInt8, data->data[1], &options);
-        }else{
+        } else {
             options.setRowLength(data->linesize[1]);
             options.setImageHeight(data->height);
             mTexU->setData(QOpenGLTexture::Luminance, QOpenGLTexture::UInt8, data->data[1], &options);
         }
     }
-    if(data->linesize[2]){
+    if (data->linesize[2]) {
         options.setRowLength(data->linesize[2]);
         options.setImageHeight(data->height);
         mTexV->setData(QOpenGLTexture::Luminance, QOpenGLTexture::UInt8, data->data[2], &options);
     }
 }
-void RealTimeRenderer::paint()
-{
+void RealTimeRenderer::paint() {
     glDepthMask(true);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    if (!mTextureAlloced)
-    {
+    if (!mTextureAlloced) {
         return;
     }
-    if(mNeedClear){
+    if (mNeedClear) {
         mNeedClear = false;
         return;
     }
@@ -274,11 +251,11 @@ void RealTimeRenderer::paint()
     mProjectMatHandle = mProgram.uniformLocation("u_projectMatrix");
     mVerticesHandle = mProgram.attributeLocation("qt_Vertex");
     mTexCoordHandle = mProgram.attributeLocation("texCoord");
-    //顶点
+    // 顶点
     mProgram.enableAttributeArray(mVerticesHandle);
     mProgram.setAttributeArray(mVerticesHandle, mVertices.constData());
 
-    //纹理坐标
+    // 纹理坐标
     mProgram.enableAttributeArray(mTexCoordHandle);
     mProgram.setAttributeArray(mTexCoordHandle, mTexcoords.constData());
 
@@ -290,8 +267,8 @@ void RealTimeRenderer::paint()
     // pixFmt
     mProgram.setUniformValue("pixFmt", mPixFmt);
 
-    //纹理
-    // Y
+    // 纹理
+    //  Y
     glActiveTexture(GL_TEXTURE0);
     mTexY->bind();
 
