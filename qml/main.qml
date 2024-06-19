@@ -23,7 +23,6 @@ ApplicationWindow {
             NativeApi.onRtpStream.connect((sdpFile)=>{
                 play(sdpFile)
             });
-            play('rtsp://newdev.rdapp.com:554/rtp/44050000001310000007?userId=253774045377');
         }
         TipsBox{
             id:tips
