@@ -177,7 +177,7 @@ void WFBReceiver::handle80211Frame(const Packet &packet) {
 static unsigned long long sendFd = INVALID_SOCKET;
 static volatile bool playing = false;
 
-#define GET_H265_NAL_UNIT_TYPE(buffer_ptr) ((buffer_ptr[0] & 0x7E) >> 1)
+#define GET_H265_NAL_UNIT_TYPE(buffer_ptr) ((buffer_ptr[2] & 0x1F) >> 1)
 enum HEVCNALUnitType {
     HEVC_NAL_TRAIL_N    = 0,
     HEVC_NAL_TRAIL_R    = 1,
