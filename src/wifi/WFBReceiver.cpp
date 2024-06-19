@@ -112,7 +112,10 @@ bool WFBReceiver::Start(const std::string &vidPid, uint8_t channel, int channelW
         try {
             rtlDevice = wifi_driver.CreateRtlDevice(dev_handle);
             rtlDevice->Init(
-                [](const Packet &p) { WFBReceiver::Instance().handle80211Frame(p); },
+                [](const Packet &p) {
+                    WFBReceiver::Instance().handle80211Frame(p);
+                    QmlNativeAPI::Instance().UpdateCount();
+                },
                 SelectedChannel {
                     .Channel = channel,
                     .ChannelOffset = 0,
@@ -141,13 +144,11 @@ bool WFBReceiver::Start(const std::string &vidPid, uint8_t channel, int channelW
 void WFBReceiver::handle80211Frame(const Packet &packet) {
 
     QmlNativeAPI::Instance().wifiFrameCount_++;
-    QmlNativeAPI::Instance().UpdateCount();
     RxFrame frame(packet.Data);
     if (!frame.IsValidWfbFrame()) {
         return;
     }
     QmlNativeAPI::Instance().wfbFrameCount_++;
-    QmlNativeAPI::Instance().UpdateCount();
 
     static int8_t rssi[4] = { 1, 1, 1, 1 };
     static uint8_t antenna[4] = { 1, 1, 1, 1 };
