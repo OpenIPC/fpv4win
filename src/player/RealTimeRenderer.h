@@ -60,4 +60,6 @@ private:
     int m_itemHeight = 0;
 
     bool mNeedClear = false;
+
+    volatile bool inited = false;
 };

@@ -43,7 +43,7 @@ void main(void)
         // NV12
         yuv.x = texture2D(tex_y, v_texCoord).r;
         yuv.y = texture2D(tex_u, v_texCoord).r - 0.5;
-        yuv.z = texture2D(tex_u, v_texCoord).g - 0.5;
+        yuv.z = texture2D(tex_u, v_texCoord).a - 0.5;
         rgb = mat3( 1.0,       1.0,         1.0,
                     0.0,       -0.3455,  1.779,
                     1.4075, -0.7169,  0.0) * yuv;
@@ -93,7 +93,6 @@ void RealTimeRenderer::init() {
     glDepthMask(GL_TRUE);
     glEnable(GL_TEXTURE_2D);
     initShader();
-    initTexture();
     initGeometry();
 }
 void RealTimeRenderer::resize(int width, int height) {
@@ -132,7 +131,7 @@ void RealTimeRenderer::initTexture() {
     mTexY->setWrapMode(QOpenGLTexture::ClampToEdge);
 
     mTexU = new QOpenGLTexture(QOpenGLTexture::Target2D);
-    mTexU->setFormat(QOpenGLTexture::LuminanceFormat);
+    mTexU->setFormat(mPixFmt == AV_PIX_FMT_NV12?QOpenGLTexture::LuminanceAlphaFormat:QOpenGLTexture::LuminanceFormat);
     //    mTexU->setFixedSamplePositions(false);
     mTexU->setMinificationFilter(QOpenGLTexture::Nearest);
     mTexU->setMagnificationFilter(QOpenGLTexture::Nearest);
@@ -156,6 +155,10 @@ void RealTimeRenderer::initGeometry() {
 }
 void RealTimeRenderer::updateTextureInfo(int width, int height, int format) {
     mPixFmt = format;
+    if(!inited) {
+        inited = true;
+        initTexture();
+    }
     if (format == AV_PIX_FMT_YUV420P || format == AV_PIX_FMT_YUVJ420P) {
         // yuv420p
         mTexY->setSize(width, height);
