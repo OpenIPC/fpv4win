@@ -278,7 +278,7 @@ void WFBReceiver::handleRtp(uint8_t *payload, uint16_t packet_size) {
             }else{
                 QmlNativeAPI::Instance().playerCodec = "H264";
                 QmlNativeAPI::Instance().PutLog("debug",
-                                                "judge Codec failed set codec "
+                                                "judge Codec failed!Set codec "
                                                     + QmlNativeAPI::Instance().playerCodec.toStdString());
             }
         }
