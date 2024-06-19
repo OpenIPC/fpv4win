@@ -263,19 +263,18 @@ void WFBReceiver::handleRtp(uint8_t *payload, uint16_t packet_size) {
 
     auto *header = (RtpHeader *)payload;
 
-    if(QmlNativeAPI::Instance().playerCodec=="AUTO") {
-        // judge H264 or h265
-        if (isH264(header->getPayloadData())) {
-            QmlNativeAPI::Instance().playerCodec = "H264";
-        } else if (isH265(header->getPayloadData())) {
-            QmlNativeAPI::Instance().playerCodec = "H265";
-        }else{
-            QmlNativeAPI::Instance().playerCodec = "H264";
-        }
-    }
-
     if (!playing) {
         playing = true;
+        if(QmlNativeAPI::Instance().playerCodec=="AUTO") {
+            // judge H264 or h265
+            if (isH264(header->getPayloadData())) {
+                QmlNativeAPI::Instance().playerCodec = "H264";
+            } else if (isH265(header->getPayloadData())) {
+                QmlNativeAPI::Instance().playerCodec = "H265";
+            }else{
+                QmlNativeAPI::Instance().playerCodec = "H264";
+            }
+        }
         QmlNativeAPI::Instance().NotifyRtpStream(header->pt, ntohl(header->ssrc));
     }
 
