@@ -4,6 +4,50 @@
 
 #include "JpegEncoder.h"
 
+#include <memory>
+inline bool convertToYUV420P(const shared_ptr<AVFrame> &frame, shared_ptr<AVFrame> &yuvFrame) {
+    int width = frame->width;
+    int height = frame->height;
+
+    // Allocate YUV frame
+    yuvFrame = shared_ptr<AVFrame>(av_frame_alloc(), [](AVFrame *f){
+        av_frame_free(&f);
+    });
+    if (!yuvFrame) {
+        return false;
+    }
+    yuvFrame->format = AV_PIX_FMT_YUVJ420P;
+    yuvFrame->width = width;
+    yuvFrame->height = height;
+
+    // Allocate buffer for YUV frame
+    int ret = av_frame_get_buffer(yuvFrame.get(), 32);
+    if (ret < 0) {
+        return false;
+    }
+
+    // Convert RGB to YUV420P
+    struct SwsContext *sws_ctx = sws_getContext(width, height, static_cast<AVPixelFormat>(frame->format),
+                                                width, height, AV_PIX_FMT_YUVJ420P,
+                                                0, nullptr, nullptr, nullptr);
+    if (!sws_ctx) {
+        return false;
+    }
+
+    // Perform RGB to YUV conversion
+    ret = sws_scale(sws_ctx, frame->data, frame->linesize, 0, height,
+                    yuvFrame->data, yuvFrame->linesize);
+    if (ret <= 0) {
+        sws_freeContext(sws_ctx);
+        return false;
+    }
+
+    // Cleanup
+    sws_freeContext(sws_ctx);
+
+    return true;
+}
+
 bool JpegEncoder::encodeJpeg(const string &outFilePath, const shared_ptr<AVFrame> &frame) {
     if (!(frame && frame->height && frame->width && frame->linesize[0])) {
         return false;
@@ -37,10 +81,24 @@ bool JpegEncoder::encodeJpeg(const string &outFilePath, const shared_ptr<AVFrame
         avcodec_alloc_context3(pCodec), [](AVCodecContext *ctx) { avcodec_free_context(&ctx); });
     codecCtx->codec_id = pFormatCtx->oformat->video_codec;
     codecCtx->codec_type = AVMEDIA_TYPE_VIDEO;
-    codecCtx->pix_fmt = AV_PIX_FMT_YUVJ420P;
+    codecCtx->pix_fmt = static_cast<AVPixelFormat>(frame->format);
     codecCtx->width = frame->width;
     codecCtx->height = frame->height;
     codecCtx->time_base = AVRational { 1, 25 };
+
+    // Convert frame to YUV420P if it's not already in that format
+    shared_ptr<AVFrame> yuvFrame;
+    if (
+        frame->format != AV_PIX_FMT_YUVJ420P &&
+        frame->format != AV_PIX_FMT_YUV420P
+        ) {
+        if (!convertToYUV420P(frame, yuvFrame)) {
+            return false;
+        }
+        codecCtx->pix_fmt = AV_PIX_FMT_YUVJ420P;
+    } else {
+        yuvFrame = frame; // If already YUV420P, use as is
+    }
 
     // 打开编码器
     if (avcodec_open2(codecCtx.get(), pCodec, nullptr) < 0) {
@@ -57,7 +115,7 @@ bool JpegEncoder::encodeJpeg(const string &outFilePath, const shared_ptr<AVFrame
     av_new_packet(pkt.get(), y_size);
 
     // 发送帧到编码上下文
-    int ret = avcodec_send_frame(codecCtx.get(), frame.get());
+    int ret = avcodec_send_frame(codecCtx.get(), yuvFrame.get());
     if (ret < 0) {
         return false;
     }
