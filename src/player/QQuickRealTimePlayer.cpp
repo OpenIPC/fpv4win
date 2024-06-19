@@ -93,13 +93,7 @@ shared_ptr<AVFrame> QQuickRealTimePlayer::getFrame(bool &got) {
         // 缓冲区出队被渲染的帧
         videoFrameQueue.pop();
     }
-    // 计算一帧的显示时间
-    auto frameDuration = 1000 / decoder->GetFps();
     // 缓冲，追帧机制
-    if (videoFrameQueue.size() < 5) {
-        double scale = videoFrameQueue.size() * frameDuration / 100.0;
-        std::this_thread::sleep_for(std::chrono::milliseconds((int)(frameDuration / scale)));
-    }
     _lastFrame = frame;
     return frame;
 }
