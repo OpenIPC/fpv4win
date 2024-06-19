@@ -178,11 +178,6 @@ void WFBReceiver::handle80211Frame(const Packet &packet) {
 static unsigned long long sendFd = INVALID_SOCKET;
 static volatile bool playing = false;
 
-#define GET_H265_NAL_UNIT_TYPE(buffer_ptr) ((buffer_ptr[0] & 0x7E) >> 1)
-inline bool isH265(const uint8_t * data){
-    auto h265NalType = GET_H265_NAL_UNIT_TYPE(data);
-    return 0<=h265NalType&&40>=h265NalType;
-}
 
 #define GET_H264_NAL_UNIT_TYPE(buffer_ptr) (buffer_ptr[0] & 0x1F)
 inline bool isH264(const uint8_t * data){
@@ -215,15 +210,10 @@ void WFBReceiver::handleRtp(uint8_t *payload, uint16_t packet_size) {
                 QmlNativeAPI::Instance().playerCodec = "H264";
                 QmlNativeAPI::Instance().PutLog("debug",
                                                 "judge Codec " + QmlNativeAPI::Instance().playerCodec.toStdString());
-            } else if (isH265(header->getPayloadData())) {
+            } else{
                 QmlNativeAPI::Instance().playerCodec = "H265";
                 QmlNativeAPI::Instance().PutLog("debug",
                                                 "judge Codec " + QmlNativeAPI::Instance().playerCodec.toStdString());
-            }else{
-                QmlNativeAPI::Instance().playerCodec = "H264";
-                QmlNativeAPI::Instance().PutLog("debug",
-                                                "judge Codec failed!Set codec "
-                                                    + QmlNativeAPI::Instance().playerCodec.toStdString());
             }
         }
         QmlNativeAPI::Instance().NotifyRtpStream(header->pt, ntohl(header->ssrc));
