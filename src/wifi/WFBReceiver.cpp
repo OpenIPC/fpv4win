@@ -11,6 +11,7 @@
 
 #include <iomanip>
 #include <mutex>
+#include <set>
 #include <sstream>
 
 #include "Rtp.h"
@@ -175,6 +176,76 @@ void WFBReceiver::handle80211Frame(const Packet &packet) {
 
 static unsigned long long sendFd = INVALID_SOCKET;
 static volatile bool playing = false;
+
+#define GET_H265_NAL_UNIT_TYPE(buffer_ptr) ((buffer_ptr[0] & 0x7E) >> 1)
+enum HEVCNALUnitType {
+    HEVC_NAL_TRAIL_N    = 0,
+    HEVC_NAL_TRAIL_R    = 1,
+    HEVC_NAL_TSA_N      = 2,
+    HEVC_NAL_TSA_R      = 3,
+    HEVC_NAL_STSA_N     = 4,
+    HEVC_NAL_STSA_R     = 5,
+    HEVC_NAL_RADL_N     = 6,
+    HEVC_NAL_RADL_R     = 7,
+    HEVC_NAL_RASL_N     = 8,
+    HEVC_NAL_RASL_R     = 9,
+    HEVC_NAL_BLA_W_LP   = 16,
+    HEVC_NAL_BLA_W_RADL = 17,
+    HEVC_NAL_BLA_N_LP   = 18,
+    HEVC_NAL_IDR_W_RADL = 19,
+    HEVC_NAL_IDR_N_LP   = 20,
+    HEVC_NAL_CRA_NUT    = 21,
+    HEVC_NAL_VPS        = 32,
+    HEVC_NAL_SPS        = 33,
+    HEVC_NAL_PPS        = 34,
+    HEVC_NAL_AUD        = 35,
+    HEVC_NAL_EOS_NUT    = 36,
+    HEVC_NAL_EOB_NUT    = 37,
+    HEVC_NAL_FD_NUT     = 38,
+    HEVC_NAL_SEI_PREFIX = 39,
+    HEVC_NAL_SEI_SUFFIX = 40,
+};
+inline bool isH265(const uint8_t * data){
+    auto h265NalType = GET_H265_NAL_UNIT_TYPE(data);
+    const static std::set<int> tset = {
+        HEVC_NAL_TRAIL_N,
+        HEVC_NAL_TRAIL_R,
+        HEVC_NAL_TSA_N,
+        HEVC_NAL_TSA_R,
+        HEVC_NAL_STSA_N,
+        HEVC_NAL_STSA_R,
+        HEVC_NAL_RADL_N,
+        HEVC_NAL_RADL_R,
+        HEVC_NAL_RASL_N,
+        HEVC_NAL_RASL_R,
+        HEVC_NAL_BLA_W_LP,
+        HEVC_NAL_BLA_W_RADL,
+        HEVC_NAL_BLA_N_LP,
+        HEVC_NAL_IDR_W_RADL,
+        HEVC_NAL_IDR_N_LP,
+        HEVC_NAL_CRA_NUT,
+        HEVC_NAL_VPS,
+        HEVC_NAL_SPS,
+        HEVC_NAL_PPS,
+        HEVC_NAL_AUD,
+        HEVC_NAL_EOS_NUT,
+        HEVC_NAL_EOB_NUT,
+        HEVC_NAL_FD_NUT,
+        HEVC_NAL_SEI_PREFIX,
+        HEVC_NAL_SEI_SUFFIX,
+    };
+    return tset.find(h265NalType) != tset.end();
+}
+
+#define GET_H264_NAL_UNIT_TYPE(buffer_ptr) (buffer_ptr[0] & 0x1F)
+inline bool isH264(const uint8_t * data){
+    // Single NAI Unit Mode = 0. // Single NAI mode (Only nals from 1-23 are allowed)
+    // Non Interleaved Mode = 1 // Non-interleaved Mode: 1-23，24 (STAP-A)，28 (FU-A) are allowed
+    // Interleaved Mode = 2,  // 25 (STAP-B)，26 (MTAP16)，27 (MTAP24)，28 (EU-A)，and 29 (EU-B) are allowed.
+    auto h264NalType = GET_H264_NAL_UNIT_TYPE(data);
+    return h264NalType>=1&&h264NalType<=29;
+}
+
 void WFBReceiver::handleRtp(uint8_t *payload, uint16_t packet_size) {
     QmlNativeAPI::Instance().rtpPktCount_++;
     QmlNativeAPI::Instance().UpdateCount();
@@ -191,6 +262,16 @@ void WFBReceiver::handleRtp(uint8_t *payload, uint16_t packet_size) {
     serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
     auto *header = (RtpHeader *)payload;
+
+    if(QmlNativeAPI::Instance().playerCodec=="AUTO") {
+        // judge H264 or h265
+        if (isH264(header->getPayloadData())) {
+            QmlNativeAPI::Instance().playerCodec = "H264";
+        } else if (isH265(header->getPayloadData())) {
+            QmlNativeAPI::Instance().playerCodec = "H265";
+        }
+    }
+
     if (!playing) {
         playing = true;
         QmlNativeAPI::Instance().NotifyRtpStream(header->pt, ntohl(header->ssrc));

@@ -247,7 +247,7 @@ ApplicationWindow {
                     ComboBox {
                         id: selectCodec
                         width: parent.width
-                        model: ['H264','H265']
+                        model: ['AUTO','H264','H265']
                         currentIndex: 0
                         Component.onCompleted: {
                             let codec = NativeApi.GetConfig()["config.codec"];
