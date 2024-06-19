@@ -11,6 +11,13 @@
 bool FFmpegDecoder::OpenInput(string &inputFile) {
   CloseInput();
 
+  if(isHwDecoderEnable){
+      hwDecoderType = av_hwdevice_find_type_by_name("d3d11va");
+      if (hwDecoderType != AV_HWDEVICE_TYPE_NONE) {
+          isHwDecoderEnable = true;
+      }
+  }
+
   AVDictionary *param = nullptr;
 
   av_dict_set(&param, "preset", "ultrafast", 0);
@@ -178,6 +185,17 @@ shared_ptr<AVFrame> FFmpegDecoder::GetNextFrame() {
   return res;
 }
 
+bool FFmpegDecoder::hwDecoderInit(AVCodecContext *ctx, const enum AVHWDeviceType type) {
+
+    if (av_hwdevice_ctx_create(&hwDeviceCtx, type,
+                               nullptr, nullptr, 0) < 0) {
+        return false;
+    }
+    ctx->hw_device_ctx = av_buffer_ref(hwDeviceCtx);
+
+    return true;
+}
+
 bool FFmpegDecoder::OpenVideo() {
   bool res = false;
 
@@ -190,9 +208,31 @@ bool FFmpegDecoder::OpenVideo() {
         const AVCodec *codec =
             avcodec_find_decoder(pFormatCtx->streams[i]->codecpar->codec_id);
 
+        //如果有存在视频，检测硬件解码器
+        if(codec&&isHwDecoderEnable){
+            for (int configIndex = 0;; configIndex++) {
+                const AVCodecHWConfig *config = avcodec_get_hw_config(codec, configIndex);
+                if (!config) {
+                    isHwDecoderEnable = false;
+                    break;
+                }
+                if (config->methods & AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX &&
+                    config->device_type == hwDecoderType) {
+                    hwPixFmt = config->pix_fmt;
+                    isHwDecoderEnable = true;
+                    break;
+                }
+            }
+        }
+
+
+
         if (codec) {
           pVideoCodecCtx = avcodec_alloc_context3(codec);
           if (pVideoCodecCtx) {
+              if(isHwDecoderEnable){
+                  isHwDecoderEnable = hwDecoderInit(pVideoCodecCtx,hwDecoderType);
+              }
             if (avcodec_parameters_to_context(
                     pVideoCodecCtx, pFormatCtx->streams[i]->codecpar) >= 0) {
               res = !(avcodec_open2(pVideoCodecCtx, codec, nullptr) < 0);
@@ -216,8 +256,7 @@ bool FFmpegDecoder::OpenVideo() {
   return res;
 }
 
-bool FFmpegDecoder::DecodeVideo(const AVPacket *avpkt,
-                                const shared_ptr<AVFrame>& pOutFrame) {
+bool FFmpegDecoder::DecodeVideo(const AVPacket *avpkt,shared_ptr<AVFrame>& pOutFrame) {
   bool res = false;
 
   if (pVideoCodecCtx && avpkt && pOutFrame) {
@@ -227,8 +266,15 @@ bool FFmpegDecoder::DecodeVideo(const AVPacket *avpkt,
       av_strerror(ret, errStr, AV_ERROR_MAX_STRING_SIZE);
       throw runtime_error("发送视频包出错 " + string(errStr));
     }
+    if(isHwDecoderEnable&&!hwFrame){
+        hwFrame = shared_ptr<AVFrame>(av_frame_alloc(),&freeFrame);
+    }
 
-    ret = avcodec_receive_frame(pVideoCodecCtx, pOutFrame.get());
+    if(isHwDecoderEnable){
+        ret = avcodec_receive_frame(pVideoCodecCtx, hwFrame.get());
+    }else{
+        ret = avcodec_receive_frame(pVideoCodecCtx, pOutFrame.get());
+    }
     if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
       // No output available right now or end of stream
       res = false;
@@ -239,6 +285,19 @@ bool FFmpegDecoder::DecodeVideo(const AVPacket *avpkt,
     } else {
       // Successfully decoded a frame
       res = true;
+    }
+    if(isHwDecoderEnable){
+        if(dropCurrentVideoFrame){
+            pOutFrame.reset();
+            return false;
+        }
+        if ((ret = av_hwframe_transfer_data(pOutFrame.get(), hwFrame.get(), 0)) < 0) {
+            if(ret<0){
+                char errStr[AV_ERROR_MAX_STRING_SIZE];
+                av_strerror(ret, errStr, AV_ERROR_MAX_STRING_SIZE);
+                throw runtime_error("Decode video frame error. "+string(errStr));
+            }
+        }
     }
   }
 
@@ -283,7 +342,6 @@ void FFmpegDecoder::CloseVideo() {
   if (pVideoCodecCtx) {
     avcodec_close(pVideoCodecCtx);
     pVideoCodecCtx = nullptr;
-    pVideoCodec = nullptr;
     videoStreamIndex = 0;
   }
 }
@@ -292,7 +350,6 @@ void FFmpegDecoder::CloseAudio() {
   if (pAudioCodecCtx) {
     avcodec_close(pAudioCodecCtx);
     pAudioCodecCtx = nullptr;
-    pAudioCodec = nullptr;
     audioStreamIndex = 0;
   }
 }

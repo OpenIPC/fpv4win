@@ -59,7 +59,7 @@ void TItemRender::synchronize(QQuickFramebufferObject *item) {
     }
     bool got = false;
     shared_ptr<AVFrame> frame = pItem->getFrame(got);
-    if (got && frame->linesize[0] && frame->linesize[1] && frame->linesize[2]) {
+    if (got && frame->linesize[0]) {
       m_render.updateTextureData(frame);
     }
   }

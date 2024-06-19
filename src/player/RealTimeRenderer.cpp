@@ -4,54 +4,65 @@
 
 
 #define VSHCODE \
-"attribute highp vec3 qt_Vertex;\n" \
-"attribute highp vec2 texCoord;\n" \
-"\n" \
-"uniform mat4 u_modelMatrix;\n" \
-"uniform mat4 u_viewMatrix;\n" \
-"uniform mat4 u_projectMatrix;\n" \
-"\n" \
-"varying vec2 v_texCoord;\n" \
-"void main(void)\n" \
-"{\n" \
-"    gl_Position = u_projectMatrix * u_viewMatrix * u_modelMatrix * vec4(qt_Vertex, 1.0f);\n" \
-"    v_texCoord = texCoord;\n" \
-"}\n" \
-"\n" \
-"\n"            \
+R"(
+attribute highp vec3 qt_Vertex;
+attribute highp vec2 texCoord;
+
+uniform mat4 u_modelMatrix;
+uniform mat4 u_viewMatrix;
+uniform mat4 u_projectMatrix;
+
+varying vec2 v_texCoord;
+void main(void)
+{
+    gl_Position = u_projectMatrix * u_viewMatrix * u_modelMatrix * vec4(qt_Vertex, 1.0f);
+    v_texCoord = texCoord;
+}
+
+)"
 
 #define FSHCPDE \
-"varying vec2 v_texCoord;\n" \
-"\n" \
-"uniform sampler2D tex_y;\n" \
-"uniform sampler2D tex_u;\n" \
-"uniform sampler2D tex_v;\n" \
-"uniform int pixFmt;\n" \
-"void main(void)\n" \
-"{\n" \
-"    vec3 yuv;\n" \
-"    vec3 rgb;\n" \
-"    if (pixFmt == 0 || pixFmt == 12) {\n" \
-"        //yuv420p\n" \
-"        yuv.x = texture2D(tex_y, v_texCoord).r;\n" \
-"        yuv.y = texture2D(tex_u, v_texCoord).r - 0.5;\n" \
-"        yuv.z = texture2D(tex_v, v_texCoord).r - 0.5;\n" \
-"        rgb = mat3( 1.0,       1.0,         1.0,\n" \
-"                    0.0,       -0.3455,  1.779,\n" \
-"                    1.4075, -0.7169,  0.0) * yuv;\n" \
-"    } else {\n" \
-"        //YUV444P\n" \
-"        yuv.x = texture2D(tex_y, v_texCoord).r;\n" \
-"        yuv.y = texture2D(tex_u, v_texCoord).r - 0.5;\n" \
-"        yuv.z = texture2D(tex_v, v_texCoord).r - 0.5;\n" \
-"\n" \
-"        rgb.x = clamp( yuv.x + 1.402 *yuv.z, 0.0, 1.0);\n" \
-"        rgb.y = clamp( yuv.x - 0.34414 * yuv.y - 0.71414 * yuv.z, 0.0, 1.0);\n" \
-"        rgb.z = clamp( yuv.x + 1.772 * yuv.y, 0.0, 1.0);\n" \
-"    }\n" \
-"    gl_FragColor = vec4(rgb, 1.0);\n" \
-"}\n" \
-"\n" \
+R"(
+varying vec2 v_texCoord;
+uniform sampler2D tex_y;
+uniform sampler2D tex_u;
+uniform sampler2D tex_v;
+uniform int pixFmt;
+void main(void)
+{
+    vec3 yuv;
+    vec3 rgb;
+    if (pixFmt == 0 || pixFmt == 12) {
+        //yuv420p
+        yuv.x = texture2D(tex_y, v_texCoord).r;
+        yuv.y = texture2D(tex_u, v_texCoord).r - 0.5;
+        yuv.z = texture2D(tex_v, v_texCoord).r - 0.5;
+        rgb = mat3( 1.0,       1.0,         1.0,
+                    0.0,       -0.3455,  1.779,
+                    1.4075, -0.7169,  0.0) * yuv;
+    } else if( pixFmt == 23 ){
+        // NV12
+        yuv.x = texture2D(tex_y, v_texCoord).r;
+        yuv.y = texture2D(tex_u, v_texCoord).r - 0.5;
+        yuv.z = texture2D(tex_u, v_texCoord).g - 0.5;
+        rgb = mat3( 1.0,       1.0,         1.0,
+                    0.0,       -0.3455,  1.779,
+                    1.4075, -0.7169,  0.0) * yuv;
+
+    } else {
+        //YUV444P
+        yuv.x = texture2D(tex_y, v_texCoord).r;
+        yuv.y = texture2D(tex_u, v_texCoord).r - 0.5;
+        yuv.z = texture2D(tex_v, v_texCoord).r - 0.5;
+
+        rgb.x = clamp( yuv.x + 1.402 *yuv.z, 0.0, 1.0);
+        rgb.y = clamp( yuv.x - 0.34414 * yuv.y - 0.71414 * yuv.z, 0.0, 1.0);
+        rgb.z = clamp( yuv.x + 1.772 * yuv.y, 0.0, 1.0);
+    }
+    gl_FragColor = vec4(rgb, 1.0);
+}
+
+)"
 
 static void safeDeleteTexture(QOpenGLTexture* texture)
 {
@@ -159,29 +170,40 @@ void RealTimeRenderer::initGeometry()
 }
 void RealTimeRenderer::updateTextureInfo(int width, int height, int format)
 {
+    mPixFmt = format;
     if (format == AV_PIX_FMT_YUV420P || format == AV_PIX_FMT_YUVJ420P)
     {
         // yuv420p
         mTexY->setSize(width, height);
-        mTexY->allocateStorage(QOpenGLTexture::Red, QOpenGLTexture::UInt8);
+        mTexY->allocateStorage(QOpenGLTexture::Luminance, QOpenGLTexture::UInt8);
 
         mTexU->setSize(width / 2, height / 2);
-        mTexU->allocateStorage(QOpenGLTexture::Red, QOpenGLTexture::UInt8);
+        mTexU->allocateStorage(QOpenGLTexture::Luminance, QOpenGLTexture::UInt8);
 
         mTexV->setSize(width / 2, height / 2);
-        mTexV->allocateStorage(QOpenGLTexture::Red, QOpenGLTexture::UInt8);
+        mTexV->allocateStorage(QOpenGLTexture::Luminance, QOpenGLTexture::UInt8);
+    }else if (format == AV_PIX_FMT_NV12){
+        mTexY->setSize(width, height);
+        mTexY->allocateStorage(QOpenGLTexture::Luminance, QOpenGLTexture::UInt8);
+
+        mTexU->setSize(width/2, height/2);
+        mTexU->allocateStorage(QOpenGLTexture::LuminanceAlpha, QOpenGLTexture::UInt8);
+
+        // NV12 not use for v
+        mTexV->setSize(2, 2);
+        mTexV->allocateStorage(QOpenGLTexture::Luminance, QOpenGLTexture::UInt8);
     }
     else
     {
         // 先按yuv444p处理
         mTexY->setSize(width, height);
-        mTexY->allocateStorage(QOpenGLTexture::Red, QOpenGLTexture::UInt8);
+        mTexY->allocateStorage(QOpenGLTexture::Luminance, QOpenGLTexture::UInt8);
 
         mTexU->setSize(width, height);
-        mTexU->allocateStorage(QOpenGLTexture::Red, QOpenGLTexture::UInt8);
+        mTexU->allocateStorage(QOpenGLTexture::Luminance, QOpenGLTexture::UInt8);
 
         mTexV->setSize(width, height);
-        mTexV->allocateStorage(QOpenGLTexture::Red, QOpenGLTexture::UInt8);
+        mTexV->allocateStorage(QOpenGLTexture::Luminance, QOpenGLTexture::UInt8);
     }
     mTextureAlloced = true;
 }
@@ -209,29 +231,28 @@ void RealTimeRenderer::updateTextureData(const std::shared_ptr<AVFrame>& data)
               << QVector3D(x2, y2, 0.0f)
               << QVector3D(x1, y2, 0.0f);
 
-    if (data->linesize[0] <= 0)
-    {
-        qWarning() << "y array is empty";
-        return;
-    }
-    if (data->linesize[1] <= 0)
-    {
-        qWarning() << "u array is empty";
-        return;
-    }
-    if (data->linesize[2] <= 0)
-    {
-        qWarning() << "v array is empty";
-        return;
-    }
     QOpenGLPixelTransferOptions options;
-    options.setImageHeight(data->height);
-    options.setRowLength(data->linesize[0]);
-    mTexY->setData(QOpenGLTexture::Luminance, QOpenGLTexture::UInt8,data->data[0], &options);
-    options.setRowLength(data->linesize[1]);
-    mTexU->setData(QOpenGLTexture::Luminance, QOpenGLTexture::UInt8, data->data[1], &options);
-    options.setRowLength(data->linesize[2]);
-    mTexV->setData(QOpenGLTexture::Luminance, QOpenGLTexture::UInt8, data->data[2], &options);
+    if(data->linesize[0]) {
+        options.setRowLength(data->linesize[0]);
+        options.setImageHeight(data->height);
+        mTexY->setData(QOpenGLTexture::Luminance, QOpenGLTexture::UInt8, data->data[0], &options);
+    }
+    if(data->linesize[1]) {
+        if(data->format == AV_PIX_FMT_NV12){
+            options.setRowLength(data->linesize[1]/2);
+            options.setImageHeight(data->height/2);
+            mTexU->setData(QOpenGLTexture::LuminanceAlpha, QOpenGLTexture::UInt8, data->data[1], &options);
+        }else{
+            options.setRowLength(data->linesize[1]);
+            options.setImageHeight(data->height);
+            mTexU->setData(QOpenGLTexture::Luminance, QOpenGLTexture::UInt8, data->data[1], &options);
+        }
+    }
+    if(data->linesize[2]){
+        options.setRowLength(data->linesize[2]);
+        options.setImageHeight(data->height);
+        mTexV->setData(QOpenGLTexture::Luminance, QOpenGLTexture::UInt8, data->data[2], &options);
+    }
 }
 void RealTimeRenderer::paint()
 {

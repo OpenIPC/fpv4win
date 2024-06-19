@@ -19,7 +19,7 @@ class FFmpegDecoder {
 public:
     FFmpegDecoder() : pImgConvertCtx(nullptr), audioBaseTime(0.0), videoBaseTime(0.0),
                       videoFramePerSecond(0.0), isOpen(false), audioStreamIndex(-1), videoStreamIndex(-1),
-                      pAudioCodec(nullptr), pAudioCodecCtx(nullptr), pVideoCodec(nullptr), pVideoCodecCtx(nullptr),
+        pAudioCodecCtx(nullptr),  pVideoCodecCtx(nullptr),
                       pFormatCtx(nullptr) { ; }
 
 public:
@@ -79,6 +79,9 @@ public:
     }
     //视频帧格式
     AVPixelFormat GetVideoFrameFormat() const{
+        if(isHwDecoderEnable){
+            return AV_PIX_FMT_NV12;
+        }
         return pVideoCodecCtx->pix_fmt;
     }
     // 获取音频frame大小
@@ -105,7 +108,7 @@ private:
                     uint8_t *pOutBuffer, size_t nOutBufferSize);
 
     // 解码视频祯
-    bool DecodeVideo(const AVPacket *avpkt,const shared_ptr<AVFrame>& pOutFrame);
+    bool DecodeVideo(const AVPacket *avpkt, shared_ptr<AVFrame>& pOutFrame);
 
     //向音频fifo写入数据
     void writeAudioBuff(uint8_t *aSample, size_t aSize);
@@ -115,20 +118,19 @@ private:
     //获取到已经解码图像回调
     std::function<void(const shared_ptr<AVFrame>& frame)> _gotFrameCallback = nullptr;
 
+    //初始化硬件解码器
+    bool hwDecoderInit(AVCodecContext *ctx, enum AVHWDeviceType type);
+
     // FFmpeg 解封装上下文
     AVFormatContext *pFormatCtx = nullptr;
 
     // FFmpeg 视频编码上下文
     AVCodecContext *pVideoCodecCtx = nullptr ;
 
-    // FFmpeg 视频编码信息
-    AVCodec *pVideoCodec = nullptr ;
 
     // FFmpeg音频编码上下文
     AVCodecContext *pAudioCodecCtx = nullptr;
 
-    // FFmpeg 音频编码信息
-    AVCodec *pAudioCodec = nullptr;
 
     //FFmpeg 音频样本格式转换
     shared_ptr<SwrContext> swrCtx;
@@ -176,6 +178,15 @@ private:
     // 音频队列
     mutex abBuffMtx;
     shared_ptr<AVFifoBuffer> audioFifoBuffer;
+
+    //硬件解码
+    enum AVHWDeviceType hwDecoderType;
+    bool isHwDecoderEnable = true;
+    enum AVPixelFormat hwPixFmt;
+    AVBufferRef *hwDeviceCtx = nullptr;
+    volatile bool dropCurrentVideoFrame = false;
+    //初始化硬件解码frame
+    shared_ptr<AVFrame> hwFrame;
 };
 
 #endif
