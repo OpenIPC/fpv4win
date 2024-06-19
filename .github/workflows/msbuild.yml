@@ -60,6 +60,7 @@ jobs:
           path: build/Release/
 
   release:
+    if: false
     needs: build
     runs-on: windows-latest
     steps:
