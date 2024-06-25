@@ -19,9 +19,15 @@ ApplicationWindow {
         id: player
         width: parent.width - 200
         height:parent.height
+        property var playingFile
         Component.onCompleted: {
             NativeApi.onRtpStream.connect((sdpFile)=>{
+                playingFile = sdpFile;
                 play(sdpFile)
+            });
+            onPlayStopped.connect(()=>{
+                stop();
+                play(playingFile)
             });
         }
         TipsBox{
