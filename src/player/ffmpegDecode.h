@@ -168,7 +168,7 @@ private:
 
     // 硬件解码
     enum AVHWDeviceType hwDecoderType;
-    bool isHwDecoderEnable = false;
+    bool isHwDecoderEnable = true;
     enum AVPixelFormat hwPixFmt;
     AVBufferRef *hwDeviceCtx = nullptr;
     volatile bool dropCurrentVideoFrame = false;
