@@ -41,7 +41,7 @@ jobs:
           git init
           git remote add origin https://github.com/microsoft/vcpkg.git
           git fetch origin --depth 1
-          git checkout -b master --track origin/master
+          git checkout b27651341123a59f7187b42ef2bc476284afb310
           .\bootstrap-vcpkg.bat
           .\vcpkg integrate install
           .\vcpkg install libusb libpcap libsodium ffmpeg qt5 sdl2 vcpkg-tool-ninja
