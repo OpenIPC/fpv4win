@@ -172,7 +172,7 @@ private:
     enum AVPixelFormat hwPixFmt;
     AVBufferRef *hwDeviceCtx = nullptr;
     volatile bool dropCurrentVideoFrame = false;
-    // 初始化硬件解码frame
+    // Hardware frame
     shared_ptr<AVFrame> hwFrame;
 };
 
