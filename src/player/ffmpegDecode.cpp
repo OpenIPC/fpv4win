@@ -69,8 +69,8 @@ bool FFmpegDecoder::OpenInput(string &inputFile) {
 
     // 创建音频解码缓存
     if (hasAudioStream) {
-        audioFifoBuffer = shared_ptr<AVFifoBuffer>(
-            av_fifo_alloc(GetAudioFrameSamples() * GetAudioChannelCount() * 10), &av_fifo_free);
+        audioFifoBuffer = shared_ptr<AVFifo>(
+            av_fifo_alloc2(0, GetAudioFrameSamples() * GetAudioChannelCount() * 10, AV_FIFO_FLAG_AUTO_GROW));
     }
     return true;
 }
@@ -364,9 +364,10 @@ int FFmpegDecoder::DecodeAudio(int nStreamIndex, const AVPacket *avpkt, uint8_t 
             if (audioFrame->format != AV_SAMPLE_FMT_S16) {
                 // Convert frame to AV_SAMPLE_FMT_S16 if needed
                 if (!swrCtx) {
-                    auto ptr = swr_alloc_set_opts(
-                        nullptr, pAudioCodecCtx->channel_layout, AV_SAMPLE_FMT_S16, pAudioCodecCtx->sample_rate,
-                        pAudioCodecCtx->channel_layout, static_cast<AVSampleFormat>(audioFrame->format),
+                    SwrContext *ptr = nullptr;
+                    swr_alloc_set_opts2(
+                        &ptr, &pAudioCodecCtx->ch_layout, AV_SAMPLE_FMT_S16, pAudioCodecCtx->sample_rate,
+                        &pAudioCodecCtx->ch_layout, static_cast<AVSampleFormat>(audioFrame->format),
                         pAudioCodecCtx->sample_rate, 0, nullptr);
 
                     auto ret = swr_init(ptr);
@@ -383,11 +384,12 @@ int FFmpegDecoder::DecodeAudio(int nStreamIndex, const AVPacket *avpkt, uint8_t 
                 int samples = swr_convert(
                     swrCtx.get(), &pDest, audioFrame->nb_samples, (const uint8_t **)audioFrame->data,
                     audioFrame->nb_samples);
-                sizeToDecode = samples * pAudioCodecCtx->channels * av_get_bytes_per_sample(AV_SAMPLE_FMT_S16);
+                sizeToDecode
+                    = samples * pAudioCodecCtx->ch_layout.nb_channels * av_get_bytes_per_sample(AV_SAMPLE_FMT_S16);
             } else {
                 // Copy S16 audio data directly
                 sizeToDecode = av_samples_get_buffer_size(
-                    nullptr, pAudioCodecCtx->channels, audioFrame->nb_samples, AV_SAMPLE_FMT_S16, 1);
+                    nullptr, pAudioCodecCtx->ch_layout.nb_channels, audioFrame->nb_samples, AV_SAMPLE_FMT_S16, 1);
                 memcpy(pDest, audioFrame->data[0], sizeToDecode);
             }
         }
@@ -414,23 +416,23 @@ int FFmpegDecoder::DecodeAudio(int nStreamIndex, const AVPacket *avpkt, uint8_t 
 
 void FFmpegDecoder::writeAudioBuff(uint8_t *aSample, size_t aSize) {
     lock_guard<mutex> lck(abBuffMtx);
-    if (av_fifo_space(audioFifoBuffer.get()) < aSize) {
+    if (av_fifo_can_write(audioFifoBuffer.get()) < aSize) {
         std::vector<uint8_t> tmp;
         tmp.resize(aSize);
-        av_fifo_generic_read(audioFifoBuffer.get(), tmp.data(), aSize, nullptr);
+        av_fifo_read(audioFifoBuffer.get(), tmp.data(), aSize);
     }
-    av_fifo_generic_write(audioFifoBuffer.get(), aSample, aSize, nullptr);
+    av_fifo_write(audioFifoBuffer.get(), aSample, aSize);
 }
 
 size_t FFmpegDecoder::ReadAudioBuff(uint8_t *aSample, size_t aSize) {
     lock_guard<mutex> lck(abBuffMtx);
-    if (av_fifo_size(audioFifoBuffer.get()) < aSize) {
+    if (av_fifo_elem_size(audioFifoBuffer.get()) < aSize) {
         return 0;
     }
-    av_fifo_generic_read(audioFifoBuffer.get(), aSample, aSize, nullptr);
+    av_fifo_read(audioFifoBuffer.get(), aSample, aSize);
     return aSize;
 }
 void FFmpegDecoder::ClearAudioBuff() {
     lock_guard<mutex> lck(abBuffMtx);
-    av_fifo_reset(audioFifoBuffer.get());
+    av_fifo_reset2(audioFifoBuffer.get());
 }
