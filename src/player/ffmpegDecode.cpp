@@ -9,7 +9,7 @@
 bool FFmpegDecoder::OpenInput(string &inputFile) {
     CloseInput();
 
-    if (isHwDecoderEnable) {
+    if (!isHwDecoderEnable) {
         hwDecoderType = av_hwdevice_find_type_by_name("d3d11va");
         if (hwDecoderType != AV_HWDEVICE_TYPE_NONE) {
             isHwDecoderEnable = true;
@@ -32,9 +32,9 @@ bool FFmpegDecoder::OpenInput(string &inputFile) {
     // 超时机制
     static const int timeout = 10;
     auto startTime = std::make_shared<uint64_t>();
-    *startTime = QDateTime::currentDateTime().toSecsSinceEpoch();
+    *startTime = QDateTime::currentSecsSinceEpoch();
     pFormatCtx->interrupt_callback.callback = [](void *ctx) -> int {
-        uint64_t now = QDateTime::currentDateTime().toSecsSinceEpoch();
+        uint64_t now = QDateTime::currentSecsSinceEpoch();
         return now - *(uint64_t *)ctx > timeout;
     };
     pFormatCtx->interrupt_callback.opaque = startTime.get();
@@ -45,7 +45,7 @@ bool FFmpegDecoder::OpenInput(string &inputFile) {
     }
 
     // 分析超时，退出，可能格式不正确
-    if (QDateTime::currentDateTime().toSecsSinceEpoch() - *startTime > timeout) {
+    if (QDateTime::currentSecsSinceEpoch() - *startTime > timeout) {
         CloseInput();
         return false;
     }
@@ -69,8 +69,8 @@ bool FFmpegDecoder::OpenInput(string &inputFile) {
 
     // 创建音频解码缓存
     if (hasAudioStream) {
-        audioFifoBuffer = shared_ptr<AVFifoBuffer>(
-            av_fifo_alloc(GetAudioFrameSamples() * GetAudioChannelCount() * 10), &av_fifo_free);
+        audioFifoBuffer = shared_ptr<AVFifo>(
+            av_fifo_alloc2(0, GetAudioFrameSamples() * GetAudioChannelCount() * 10, AV_FIFO_FLAG_AUTO_GROW));
     }
     return true;
 }
@@ -182,7 +182,6 @@ shared_ptr<AVFrame> FFmpegDecoder::GetNextFrame() {
 }
 
 bool FFmpegDecoder::hwDecoderInit(AVCodecContext *ctx, const enum AVHWDeviceType type) {
-
     if (av_hwdevice_ctx_create(&hwDeviceCtx, type, nullptr, nullptr, 0) < 0) {
         return false;
     }
@@ -213,7 +212,6 @@ bool FFmpegDecoder::OpenVideo() {
                         if (config->methods & AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX
                             && config->device_type == hwDecoderType) {
                             hwPixFmt = config->pix_fmt;
-                            isHwDecoderEnable = true;
                             break;
                         }
                     }
@@ -225,6 +223,7 @@ bool FFmpegDecoder::OpenVideo() {
                         if (isHwDecoderEnable) {
                             isHwDecoderEnable = hwDecoderInit(pVideoCodecCtx, hwDecoderType);
                         }
+
                         if (avcodec_parameters_to_context(pVideoCodecCtx, pFormatCtx->streams[i]->codecpar) >= 0) {
                             res = !(avcodec_open2(pVideoCodecCtx, codec, nullptr) < 0);
                             if (res) {
@@ -247,25 +246,28 @@ bool FFmpegDecoder::OpenVideo() {
     return res;
 }
 
-bool FFmpegDecoder::DecodeVideo(const AVPacket *avpkt, shared_ptr<AVFrame> &pOutFrame) {
+bool FFmpegDecoder::DecodeVideo(const AVPacket *av_pkt, shared_ptr<AVFrame> &pOutFrame) {
     bool res = false;
 
-    if (pVideoCodecCtx && avpkt && pOutFrame) {
-        int ret = avcodec_send_packet(pVideoCodecCtx, avpkt);
+    if (pVideoCodecCtx && av_pkt && pOutFrame) {
+        int ret = avcodec_send_packet(pVideoCodecCtx, av_pkt);
         if (ret < 0) {
             char errStr[AV_ERROR_MAX_STRING_SIZE];
             av_strerror(ret, errStr, AV_ERROR_MAX_STRING_SIZE);
             throw runtime_error("发送视频包出错 " + string(errStr));
         }
-        if (isHwDecoderEnable && !hwFrame) {
-            hwFrame = shared_ptr<AVFrame>(av_frame_alloc(), &freeFrame);
-        }
 
         if (isHwDecoderEnable) {
+            // Initialize the hardware frame.
+            if (!hwFrame) {
+                hwFrame = shared_ptr<AVFrame>(av_frame_alloc(), &freeFrame);
+            }
+
             ret = avcodec_receive_frame(pVideoCodecCtx, hwFrame.get());
         } else {
             ret = avcodec_receive_frame(pVideoCodecCtx, pOutFrame.get());
         }
+
         if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
             // No output available right now or end of stream
             res = false;
@@ -277,17 +279,20 @@ bool FFmpegDecoder::DecodeVideo(const AVPacket *avpkt, shared_ptr<AVFrame> &pOut
             // Successfully decoded a frame
             res = true;
         }
+
         if (isHwDecoderEnable) {
             if (dropCurrentVideoFrame) {
                 pOutFrame.reset();
                 return false;
             }
-            if ((ret = av_hwframe_transfer_data(pOutFrame.get(), hwFrame.get(), 0)) < 0) {
-                if (ret < 0) {
-                    char errStr[AV_ERROR_MAX_STRING_SIZE];
-                    av_strerror(ret, errStr, AV_ERROR_MAX_STRING_SIZE);
-                    throw runtime_error("Decode video frame error. " + string(errStr));
-                }
+
+            // Copy data from the hw surface to the out frame.
+            ret = av_hwframe_transfer_data(pOutFrame.get(), hwFrame.get(), 0);
+
+            if (ret < 0) {
+                char errStr[AV_ERROR_MAX_STRING_SIZE];
+                av_strerror(ret, errStr, AV_ERROR_MAX_STRING_SIZE);
+                throw runtime_error("Decode video frame error. " + string(errStr));
             }
         }
     }
@@ -364,9 +369,10 @@ int FFmpegDecoder::DecodeAudio(int nStreamIndex, const AVPacket *avpkt, uint8_t 
             if (audioFrame->format != AV_SAMPLE_FMT_S16) {
                 // Convert frame to AV_SAMPLE_FMT_S16 if needed
                 if (!swrCtx) {
-                    auto ptr = swr_alloc_set_opts(
-                        nullptr, pAudioCodecCtx->channel_layout, AV_SAMPLE_FMT_S16, pAudioCodecCtx->sample_rate,
-                        pAudioCodecCtx->channel_layout, static_cast<AVSampleFormat>(audioFrame->format),
+                    SwrContext *ptr = nullptr;
+                    swr_alloc_set_opts2(
+                        &ptr, &pAudioCodecCtx->ch_layout, AV_SAMPLE_FMT_S16, pAudioCodecCtx->sample_rate,
+                        &pAudioCodecCtx->ch_layout, static_cast<AVSampleFormat>(audioFrame->format),
                         pAudioCodecCtx->sample_rate, 0, nullptr);
 
                     auto ret = swr_init(ptr);
@@ -383,11 +389,12 @@ int FFmpegDecoder::DecodeAudio(int nStreamIndex, const AVPacket *avpkt, uint8_t 
                 int samples = swr_convert(
                     swrCtx.get(), &pDest, audioFrame->nb_samples, (const uint8_t **)audioFrame->data,
                     audioFrame->nb_samples);
-                sizeToDecode = samples * pAudioCodecCtx->channels * av_get_bytes_per_sample(AV_SAMPLE_FMT_S16);
+                sizeToDecode
+                    = samples * pAudioCodecCtx->ch_layout.nb_channels * av_get_bytes_per_sample(AV_SAMPLE_FMT_S16);
             } else {
                 // Copy S16 audio data directly
                 sizeToDecode = av_samples_get_buffer_size(
-                    nullptr, pAudioCodecCtx->channels, audioFrame->nb_samples, AV_SAMPLE_FMT_S16, 1);
+                    nullptr, pAudioCodecCtx->ch_layout.nb_channels, audioFrame->nb_samples, AV_SAMPLE_FMT_S16, 1);
                 memcpy(pDest, audioFrame->data[0], sizeToDecode);
             }
         }
@@ -414,23 +421,23 @@ int FFmpegDecoder::DecodeAudio(int nStreamIndex, const AVPacket *avpkt, uint8_t 
 
 void FFmpegDecoder::writeAudioBuff(uint8_t *aSample, size_t aSize) {
     lock_guard<mutex> lck(abBuffMtx);
-    if (av_fifo_space(audioFifoBuffer.get()) < aSize) {
+    if (av_fifo_can_write(audioFifoBuffer.get()) < aSize) {
         std::vector<uint8_t> tmp;
         tmp.resize(aSize);
-        av_fifo_generic_read(audioFifoBuffer.get(), tmp.data(), aSize, nullptr);
+        av_fifo_read(audioFifoBuffer.get(), tmp.data(), aSize);
     }
-    av_fifo_generic_write(audioFifoBuffer.get(), aSample, aSize, nullptr);
+    av_fifo_write(audioFifoBuffer.get(), aSample, aSize);
 }
 
 size_t FFmpegDecoder::ReadAudioBuff(uint8_t *aSample, size_t aSize) {
     lock_guard<mutex> lck(abBuffMtx);
-    if (av_fifo_size(audioFifoBuffer.get()) < aSize) {
+    if (av_fifo_elem_size(audioFifoBuffer.get()) < aSize) {
         return 0;
     }
-    av_fifo_generic_read(audioFifoBuffer.get(), aSample, aSize, nullptr);
+    av_fifo_read(audioFifoBuffer.get(), aSample, aSize);
     return aSize;
 }
 void FFmpegDecoder::ClearAudioBuff() {
     lock_guard<mutex> lck(abBuffMtx);
-    av_fifo_reset(audioFifoBuffer.get());
+    av_fifo_reset2(audioFifoBuffer.get());
 }
